@@ -9,20 +9,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val javaAudioDeviceModule = JavaAudioDeviceModule.builder(this)
-            .setAudioRecordStateCallback(object : JavaAudioDeviceModule.AudioRecordStateCallback {
-                override fun onWebRtcAudioRecordStart() {
+        WebRTCManager.getInstance().init(applicationContext)
+    }
 
-                }
-
-                override fun onWebRtcAudioRecordStop() {
-
-                }
-
-            }).setSamplesReadyCallback {
-
-            }
-            .createAudioDeviceModule()
-
+    override fun onDestroy() {
+        super.onDestroy()
+        WebRTCManager.getInstance().release()
     }
 }
