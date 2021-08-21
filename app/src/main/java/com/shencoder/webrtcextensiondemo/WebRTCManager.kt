@@ -62,9 +62,9 @@ class WebRTCManager private constructor() {
 //                        audioDeviceModule,
 //                        audioSamples -> {
 //                        //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
-//                        int audioFormat = audioSamples.getAudioFormat ();
-//                        int channelCount = audioSamples.getChannelCount ();
-//                        int sampleRate = audioSamples.getSampleRate ();
+//                        int audioFormat = audioSamples.getAudioFormat();
+//                        int channelCount = audioSamples.getChannelCount();
+//                        int sampleRate = audioSamples.getSampleRate();
 //                        //pcm格式数据
 //                        byte[] data = audioSamples.getData ();
 //                    });
