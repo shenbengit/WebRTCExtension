@@ -27,7 +27,7 @@ dependencies {
 //这里替换成你创建的JavaAudioDeviceModule
 val audioDeviceModule : JavaAudioDeviceModule = JavaAudioDeviceModule.builder(applicationContext).createAudioDeviceModule()
 //kotlin
-audioDeviceModule.getAudioTrackSamplesReadyCallback {
+audioDeviceModule.setAudioTrackSamplesReadyCallback {
     //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
     val audioFormat = it.audioFormat
     val channelCount = it.channelCount
@@ -37,7 +37,7 @@ audioDeviceModule.getAudioTrackSamplesReadyCallback {
 }
 
 //java
-JavaAudioDeviceModuleExtKt.getAudioTrackSamplesReadyCallback(
+JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
     audioDeviceModule,
     audioSamples -> {
     //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
