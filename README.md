@@ -49,3 +49,5 @@ JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
     byte[] data = audioSamples.getData ();
 });
 ```
+
+# [License](https://github.com/shenbengit/WebRTCExtension/blob/master/LICENSE)
