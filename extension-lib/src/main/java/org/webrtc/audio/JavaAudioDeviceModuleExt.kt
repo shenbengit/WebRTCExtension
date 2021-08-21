@@ -17,7 +17,7 @@ import android.media.AudioTrack
  *
  * @param samplesReadyCallback 回调接口 ，原始pcm数据
  */
-fun JavaAudioDeviceModule.getAudioTrackSamplesReadyCallback(samplesReadyCallback: JavaAudioDeviceModule.SamplesReadyCallback) {
+fun JavaAudioDeviceModule.setAudioTrackSamplesReadyCallback(samplesReadyCallback: JavaAudioDeviceModule.SamplesReadyCallback) {
     val deviceModuleClass = this::class.java
     val audioOutputField = deviceModuleClass.getDeclaredField("audioOutput")
     audioOutputField.isAccessible = true

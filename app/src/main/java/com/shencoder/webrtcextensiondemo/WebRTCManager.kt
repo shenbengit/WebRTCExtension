@@ -3,7 +3,7 @@ package com.shencoder.webrtcextensiondemo
 import android.content.Context
 import org.webrtc.*
 import org.webrtc.audio.JavaAudioDeviceModule
-import org.webrtc.audio.getAudioTrackSamplesReadyCallback
+import org.webrtc.audio.setAudioTrackSamplesReadyCallback
 
 /**
  *
@@ -48,7 +48,7 @@ class WebRTCManager private constructor() {
             }
             .setAudioTrackStateCallback(object : JavaAudioDeviceModule.AudioTrackStateCallback {
                 override fun onWebRtcAudioTrackStart() {
-                    audioDeviceModule.getAudioTrackSamplesReadyCallback {
+                    audioDeviceModule.setAudioTrackSamplesReadyCallback {
                         //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
                         val audioFormat = it.audioFormat
                         val channelCount = it.channelCount
@@ -58,7 +58,7 @@ class WebRTCManager private constructor() {
                     }
 
                     //如果使用Java
-//                    JavaAudioDeviceModuleExtKt.getAudioTrackSamplesReadyCallback(
+//                    JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
 //                        audioDeviceModule,
 //                        audioSamples -> {
 //                        //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
