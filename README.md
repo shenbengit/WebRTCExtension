@@ -2,7 +2,8 @@
 Android端WebRTC一些扩展方法:
 
 >1、获取网络传输中对方的音频数据     
->2、待补充...
+>2、支持自定义是否启用H264、VP8、VP9编码    
+>3、待补充...
 
 ## 引入
 ### 将JitPack存储库添加到您的项目中(项目根目录下build.gradle文件)
@@ -51,4 +52,14 @@ JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
 });
 ```
 
+>支持自定义是否启用H264、VP8、VP9编码，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/21bc32beb66cbd904810ee452fb0e8e1a34dbb33/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L84)    
+>具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119846853)
+```kotlin
+
+//kotlin
+
+
+//java
+
+```
 # [License](https://github.com/shenbengit/WebRTCExtension/blob/master/LICENSE)
