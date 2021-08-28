@@ -1,6 +1,9 @@
 package com.shencoder.webrtcextensiondemo
 
 import android.content.Context
+import android.media.MediaCodecInfo
+import android.os.Build
+import android.text.TextUtils
 import org.webrtc.*
 import org.webrtc.audio.JavaAudioDeviceModule
 import org.webrtc.audio.setAudioTrackSamplesReadyCallback
@@ -35,8 +38,7 @@ class WebRTCManager private constructor() {
 
         val eglBaseContext = EglBase.create().eglBaseContext
 
-        val defaultVideoEncoderFactory = DefaultVideoEncoderFactory(eglBaseContext, true, true)
-        val defaultVideoDecoderFactory = DefaultVideoDecoderFactory(eglBaseContext)
+
         audioDeviceModule = JavaAudioDeviceModule.builder(applicationContext)
             .setSamplesReadyCallback {
                 //音频输入数据，麦克风数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
@@ -78,6 +80,28 @@ class WebRTCManager private constructor() {
 
         val options = PeerConnectionFactory.Options()
 
+//        val defaultVideoEncoderFactory = DefaultVideoEncoderFactory(eglBaseContext, true, true)
+        val defaultVideoEncoderFactory =
+            createCustomVideoEncoderFactory(eglBaseContext, enableIntelVp8Encoder = true,
+                enableH264HighProfile = true,
+                videoEncoderSupportedCallback = object : VideoEncoderSupportedCallback {
+                    override fun isSupportedH264(info: MediaCodecInfo): Boolean {
+                        //判断编码器是否支持
+                        return TextUtils.equals(
+                            "OMX.rk.video_encoder.avc",
+                            info.name
+                        ) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+                    }
+
+                    override fun isSupportedVp8(info: MediaCodecInfo): Boolean {
+                        return true
+                    }
+
+                    override fun isSupportedVp9(info: MediaCodecInfo): Boolean {
+                        return true
+                    }
+                })
+        val defaultVideoDecoderFactory = DefaultVideoDecoderFactory(eglBaseContext)
         mPeerConnectionFactory = PeerConnectionFactory.builder()
             .setOptions(options)
             .setAudioDeviceModule(audioDeviceModule)
