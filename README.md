@@ -23,7 +23,8 @@ dependencies {
 }
 ```
 ## 使用事例
->获取网络传输中对方的音频数据，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/7e4e63f3e64f0344fc35022051c410a3cb531ba7/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L51)
+>获取网络传输中对方的音频数据，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/7e4e63f3e64f0344fc35022051c410a3cb531ba7/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L51)    
+>具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119846853)
 ```kotlin
 //这里替换成你创建的JavaAudioDeviceModule
 val audioDeviceModule : JavaAudioDeviceModule = JavaAudioDeviceModule.builder(applicationContext).createAudioDeviceModule()
