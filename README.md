@@ -57,9 +57,51 @@ JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
 ```kotlin
 
 //kotlin
+//val defaultVideoEncoderFactory = DefaultVideoEncoderFactory(eglBaseContext, true, true)
+val defaultVideoEncoderFactory =
+    createCustomVideoEncoderFactory(eglBaseContext, enableIntelVp8Encoder = true,
+        enableH264HighProfile = true,
+        videoEncoderSupportedCallback = object : VideoEncoderSupportedCallback {
+            override fun isSupportedH264(info: MediaCodecInfo): Boolean {
+                //判断编码器是否支持
+                return TextUtils.equals(
+                    "OMX.rk.video_encoder.avc",
+                    info.name
+                ) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+            }
 
+            override fun isSupportedVp8(info: MediaCodecInfo): Boolean {
+                return true
+            }
+
+            override fun isSupportedVp9(info: MediaCodecInfo): Boolean {
+                return true
+            }
+        })
+val defaultVideoDecoderFactory = DefaultVideoDecoderFactory(eglBaseContext)
+mPeerConnectionFactory = PeerConnectionFactory.builder()
+.setOptions(options)
+.setAudioDeviceModule(audioDeviceModule)
+.setVideoEncoderFactory(defaultVideoEncoderFactory)
+.setVideoDecoderFactory(defaultVideoDecoderFactory)
+.createPeerConnectionFactory()
 
 //java
+DefaultVideoEncoderFactory encoderFactory = DefaultVideoEncoderFactoryExtKt.createCustomVideoEncoderFactory(eglBaseContext, true, , true, new VideoEncoderSupportedCallback() {
+    @Override
+    public boolean isSupportedH264(@NonNull MediaCodecInfo info) {
+        return false;
+    }
 
+    @Override
+    public boolean isSupportedVp8(@NonNull MediaCodecInfo info) {
+        return false;
+    }
+
+    @Override
+    public boolean isSupportedVp9(@NonNull MediaCodecInfo info) {
+        return false;
+    }
+});
 ```
 # [License](https://github.com/shenbengit/WebRTCExtension/blob/master/LICENSE)
