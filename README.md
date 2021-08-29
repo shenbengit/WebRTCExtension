@@ -53,7 +53,7 @@ JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
 ```
 
 >支持自定义是否启用H264、VP8、VP9编码，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/21bc32beb66cbd904810ee452fb0e8e1a34dbb33/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L84)    
->具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119846853)
+>具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119982257)
 ```kotlin
 
 //kotlin
