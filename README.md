@@ -1,7 +1,7 @@
 # WebRTCExtension
 Android端WebRTC一些扩展方法:
 
->1、获取网络传输中对方的音频数据     
+>1、获取音频输出数据     
 >2、支持自定义是否启用H264、VP8、VP9编码    
 >3、待补充...
 
@@ -24,7 +24,7 @@ dependencies {
 }
 ```
 ## 使用事例
->获取网络传输中对方的音频数据，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/7e4e63f3e64f0344fc35022051c410a3cb531ba7/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L51)    
+>获取音频输出数据，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/7e4e63f3e64f0344fc35022051c410a3cb531ba7/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L51)    
 >具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119846853)
 ```kotlin
 //这里替换成你创建的JavaAudioDeviceModule
