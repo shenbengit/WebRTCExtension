@@ -14,9 +14,7 @@ class MainActivity : AppCompatActivity() {
         val viewRenderer: CustomSurfaceViewRenderer = findViewById(R.id.viewRenderer)
         //是否垂直镜像
         viewRenderer.setMirrorVertically(false)
-        /**
-         * 旋转角度
-         */
+        //设置旋转角度：0°、90°、180°、270°
         viewRenderer.setRotationAngle(RotationAngle.ANGLE_0)
 
         WebRTCManager.getInstance().init(applicationContext)
