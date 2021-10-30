@@ -9,13 +9,13 @@ import android.media.MediaCodecInfo
  * @email   714081644@qq.com
  */
 
-
+@JvmOverloads
 fun createVideoEncoderFactory(
     eglContext: EglBase.Context?,
     enableIntelVp8Encoder: Boolean,
     enableH264HighProfile: Boolean,
-    codecAllowedPredicate: Predicate<MediaCodecInfo>?
-) = DefaultVideoEncoderFactory(
+    codecAllowedPredicate: Predicate<MediaCodecInfo>? = null
+): DefaultVideoEncoderFactory = DefaultVideoEncoderFactory(
     HardwareVideoEncoderFactory(
         eglContext,
         enableIntelVp8Encoder,
@@ -24,13 +24,14 @@ fun createVideoEncoderFactory(
     )
 )
 
+@JvmOverloads
 fun createCustomVideoEncoderFactory(
     eglContext: EglBase.Context?,
     enableIntelVp8Encoder: Boolean,
     enableH264HighProfile: Boolean,
     codecAllowedPredicate: Predicate<MediaCodecInfo>? = null,
     videoEncoderSupportedCallback: VideoEncoderSupportedCallback? = null
-) = DefaultVideoEncoderFactory(
+): DefaultVideoEncoderFactory = DefaultVideoEncoderFactory(
     CustomHardwareVideoEncoderFactory(
         eglContext,
         enableIntelVp8Encoder,
@@ -45,7 +46,7 @@ fun createCustomVideoEncoderFactory(
     enableIntelVp8Encoder: Boolean,
     enableH264HighProfile: Boolean,
     videoEncoderSupportedCallback: VideoEncoderSupportedCallback?
-) = createCustomVideoEncoderFactory(
+): DefaultVideoEncoderFactory = createCustomVideoEncoderFactory(
     eglContext,
     enableIntelVp8Encoder,
     enableH264HighProfile,
