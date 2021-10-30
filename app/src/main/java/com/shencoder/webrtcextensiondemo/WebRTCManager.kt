@@ -90,7 +90,7 @@ class WebRTCManager private constructor() {
                         return TextUtils.equals(
                             "OMX.rk.video_encoder.avc",
                             info.name
-                        ) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+                        )
                     }
 
                     override fun isSupportedVp8(info: MediaCodecInfo): Boolean {
