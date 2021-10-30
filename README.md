@@ -1,9 +1,9 @@
 # WebRTCExtension
 Android端WebRTC一些扩展方法:
 
->1、获取音频输出数据     
->2、支持自定义是否启用H264、VP8、VP9编码    
->3、待补充...
+>1、获取音频输出数据；     
+>2、支持自定义是否启用H264、VP8、VP9编码；    
+>3、自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；    
 
 ## 引入
 ### 将JitPack存储库添加到您的项目中(项目根目录下build.gradle文件)
@@ -103,5 +103,39 @@ DefaultVideoEncoderFactory encoderFactory = DefaultVideoEncoderFactoryExtKt.crea
         return false;
     }
 });
+```
+
+
+>自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；    
+>使用方法与**org.webrtc.SurfaceViewRenderer**一致，将**org.webrtc.SurfaceViewRenderer**替换成**com.shencoder.webrtcextension.CustomSurfaceViewRenderer**即可。   
+  
+布局中使用    
+```xml
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.shencoder.webrtcextension.CustomSurfaceViewRenderer
+        android:id="@+id/viewRenderer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+
+代码中使用    
+```java
+CustomSurfaceViewRenderer viewRenderer = findViewById(R.id.viewRenderer);
+//是否垂直镜像
+viewRenderer.setMirrorVertically(false);
+//设置旋转角度：0°、90°、180°、270°
+viewRenderer.setRotationAngle(RotationAngle.ANGLE_90);
 ```
 # [License](https://github.com/shenbengit/WebRTCExtension/blob/master/LICENSE)
