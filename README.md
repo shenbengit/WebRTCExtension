@@ -130,7 +130,7 @@ DefaultVideoEncoderFactory encoderFactory = DefaultVideoEncoderFactoryExtKt.crea
 </androidx.constraintlayout.widget.ConstraintLayout>
 ```
 
-代码中调用    
+代码中使用    
 ```java
 CustomSurfaceViewRenderer viewRenderer = findViewById(R.id.viewRenderer);
 //是否垂直镜像
