@@ -29,8 +29,9 @@ android {
 }
 
 dependencies {
-    compileOnly 'androidx.annotation:annotation:1.2.0'
+    compileOnly 'androidx.annotation:annotation:1.3.0'
     compileOnly 'org.webrtc:google-webrtc:1.0.32006'
+    api "io.github.crow-misia.libyuv:libyuv-android:0.13.0"
 }
 
 // Because the components are created only during the afterEvaluate phase, you must
@@ -46,7 +47,7 @@ afterEvaluate {
                 // You can then customize attributes of the publication as shown below.
                 groupId = 'com.shencoder'
                 artifactId = 'webrtcextension'
-                version = '1.0.2'
+                version = '1.0.4'
             }
         }
     }
