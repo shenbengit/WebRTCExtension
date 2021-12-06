@@ -1,9 +1,14 @@
 package com.shencoder.webrtcextensiondemo
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.media.MediaCodecInfo
 import android.os.Build
 import android.text.TextUtils
+import com.shencoder.webrtcextension.OverlayNV21VideoProcessor
+import com.shencoder.webrtcextension.ProxyVideoSink
+import com.shencoder.webrtcextension.util.Nv21BufferUtil
+import com.shencoder.webrtcextensiondemo.R.drawable.ding
 import org.webrtc.*
 import org.webrtc.audio.JavaAudioDeviceModule
 import org.webrtc.audio.setAudioTrackSamplesReadyCallback
@@ -108,6 +113,43 @@ class WebRTCManager private constructor() {
             .setVideoEncoderFactory(defaultVideoEncoderFactory)
             .setVideoDecoderFactory(defaultVideoDecoderFactory)
             .createPeerConnectionFactory()
+
+        //目前仅支持Camera1，且captureToTexture 必须要传false
+        val camera1Enumerator = Camera1Enumerator(false)
+        val videoCapturer = camera1Enumerator.createCapturer("front", null)
+        val videoSource = mPeerConnectionFactory.createVideoSource(videoCapturer.isScreencast)
+        videoCapturer.initialize(
+            SurfaceTextureHelper.create("SurfaceTextureHelper", eglBaseContext),
+            applicationContext,
+            videoSource.capturerObserver
+        )
+
+        val bitmap = BitmapFactory.decodeResource(applicationContext.resources, ding)
+
+        videoSource.setVideoProcessor(
+            OverlayNV21VideoProcessor(
+                overlayNv21Buffer = Nv21BufferUtil.argb8888BitmapToNv21Buffer(
+                    bitmap,
+                    true
+                ),
+                left = 50,
+                top = 50,
+                hasTransparent = true
+            )
+        )
+
+        val videoTrack = mPeerConnectionFactory.createVideoTrack(
+            "video_track",
+            videoSource
+        )
+
+        val svr = SurfaceViewRenderer(applicationContext)
+        videoTrack.addSink(ProxyVideoSink(svr, object : ProxyVideoSink.VideoFrameProcessor {
+            override fun onFrameProcessor(frame: VideoFrame): VideoFrame {
+                return frame
+            }
+        }))
+
     }
 
     fun release() {
