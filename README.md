@@ -1,9 +1,14 @@
 # WebRTCExtension
 Android端WebRTC一些扩展方法:
 
->1、获取音频输出数据；     
->2、支持自定义是否启用H264、VP8、VP9编码；    
->3、自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；    
+- 1、获取音频输出数据；    
+- 2、支持自定义是否启用H264、VP8、VP9编码；    
+- 3、自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；  
+- 4、添加VideoSink代理类(ProxyVideoSink)；    
+- 5、支持VideoProcessor针对NV21格式数据进行叠图功能，添加基础类；
+
+示例中的[demo](https://github.com/shenbengit/WebRTCExtension/tree/master/app)需要使用[SRS视频服务器](https://github.com/ossrs/srs)，具体搭建过程详见SRS官方文档。    
+> 其他Android端WebRTC结合SRS使用示例，详见[WebRTC-SRS](https://github.com/shenbengit/WebRTC-SRS)。
 
 ## 引入
 ### 将JitPack存储库添加到您的项目中(项目根目录下build.gradle文件)
@@ -24,38 +29,48 @@ dependencies {
 }
 ```
 ## 使用事例
->获取音频输出数据，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/7e4e63f3e64f0344fc35022051c410a3cb531ba7/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L51)    
->具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119846853)
-```kotlin
-//这里替换成你创建的JavaAudioDeviceModule
-val audioDeviceModule : JavaAudioDeviceModule = JavaAudioDeviceModule.builder(applicationContext).createAudioDeviceModule()
-//kotlin
-audioDeviceModule.setAudioTrackSamplesReadyCallback {
-    //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
-    val audioFormat = it.audioFormat
-    val channelCount = it.channelCount
-    val sampleRate = it.sampleRate
-    //pcm格式数据
-    val data = it.data
-}
+### 获取音频输出数据    
 
-//java
-JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(
-    audioDeviceModule,
-    audioSamples -> {
-    //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
-    int audioFormat = audioSamples.getAudioFormat();
-    int channelCount = audioSamples.getChannelCount();
-    int sampleRate = audioSamples.getSampleRate();
-    //pcm格式数据
-    byte[] data = audioSamples.getData();
-});
+具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119846853)
+
+```kotlin
+val audioDeviceModule = JavaAudioDeviceModule.builder(this)
+    .setAudioTrackStateCallback(object : JavaAudioDeviceModule.AudioTrackStateCallback {
+        override fun onWebRtcAudioTrackStart() {
+            //添加音频输出数据监听
+            //kotlin
+            audioDeviceModule.setAudioTrackSamplesReadyCallback {
+                //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
+                val audioFormat = it.audioFormat
+                val channelCount = it.channelCount
+                val sampleRate = it.sampleRate
+                //pcm格式数据
+                val data = it.data
+            }
+            
+            //use java
+//            JavaAudioDeviceModuleExtKt.setAudioTrackSamplesReadyCallback(audioDeviceModule, audioSamples -> {
+//                //音频输出数据，通话时对方数据，原始pcm数据，可以直接录制成pcm文件，再转成mp3
+//                int audioFormat = audioSamples.getAudioFormat();
+//                int channelCount = audioSamples.getChannelCount();
+//                int sampleRate = audioSamples.getSampleRate();
+//                //pcm格式数据
+//                byte[] data = audioSamples.getData ();
+//             });
+        }
+
+        override fun onWebRtcAudioTrackStop() {
+        }
+
+}) 
+.setSamplesReadyCallback {
+
+}.createAudioDeviceModule()
 ```
 
->支持自定义是否启用H264、VP8、VP9编码，[详见事例](https://github.com/shenbengit/WebRTCExtension/blob/21bc32beb66cbd904810ee452fb0e8e1a34dbb33/app/src/main/java/com/shencoder/webrtcextensiondemo/WebRTCManager.kt#L84)    
->具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119982257)
+### 支持自定义是否启用H264、VP8、VP9编码        
+具体实现流程移步[博客](https://blog.csdn.net/csdn_shen0221/article/details/119982257)
 ```kotlin
-
 //kotlin
 //val defaultVideoEncoderFactory = DefaultVideoEncoderFactory(eglBaseContext, true, true)
 val defaultVideoEncoderFactory =
@@ -80,13 +95,13 @@ val defaultVideoEncoderFactory =
         })
 val defaultVideoDecoderFactory = DefaultVideoDecoderFactory(eglBaseContext)
 mPeerConnectionFactory = PeerConnectionFactory.builder()
-.setOptions(options)
-.setAudioDeviceModule(audioDeviceModule)
-.setVideoEncoderFactory(defaultVideoEncoderFactory)
-.setVideoDecoderFactory(defaultVideoDecoderFactory)
-.createPeerConnectionFactory()
+    .setOptions(options)
+    .setAudioDeviceModule(audioDeviceModule)
+    .setVideoEncoderFactory(defaultVideoEncoderFactory)
+    .setVideoDecoderFactory(defaultVideoDecoderFactory)
+    .createPeerConnectionFactory()
 
-//java
+//use java
 DefaultVideoEncoderFactory encoderFactory = DefaultVideoEncoderFactoryExtKt.createCustomVideoEncoderFactory(eglBaseContext, true, , true, new VideoEncoderSupportedCallback() {
     @Override
     public boolean isSupportedH264(@NonNull MediaCodecInfo info) {
@@ -106,8 +121,8 @@ DefaultVideoEncoderFactory encoderFactory = DefaultVideoEncoderFactoryExtKt.crea
 ```
 
 
->自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；    
->使用方法与**org.webrtc.SurfaceViewRenderer**一致，将**org.webrtc.SurfaceViewRenderer**替换成**com.shencoder.webrtcextension.CustomSurfaceViewRenderer**即可。   
+### 自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；    
+使用方法与**org.webrtc.SurfaceViewRenderer**一致，将**org.webrtc.SurfaceViewRenderer**替换成**com.shencoder.webrtcextension.CustomSurfaceViewRenderer**即可。其他使用方法不变。   
   
 布局中使用    
 ```xml
@@ -131,11 +146,126 @@ DefaultVideoEncoderFactory encoderFactory = DefaultVideoEncoderFactoryExtKt.crea
 ```
 
 代码中使用    
-```java
-CustomSurfaceViewRenderer viewRenderer = findViewById(R.id.viewRenderer);
+```kotlin
+val viewRenderer = findViewById<CustomSurfaceViewRenderer>()
 //是否垂直镜像
-viewRenderer.setMirrorVertically(false);
+viewRenderer.setMirrorVertically(false)
 //设置旋转角度：0°、90°、180°、270°
-viewRenderer.setRotationAngle(RotationAngle.ANGLE_90);
+viewRenderer.setRotationAngle(RotationAngle.ANGLE_90)
 ```
+
+### VideoSink代理类(ProxyVideoSink)
+
+```kotlin
+val svr = findViewById<SurfaceViewRenderer>(R.id.svr)
+val proxy = ProxyVideoSink(svr, object:VideoFrameProcessor{
+    override fun onFrameProcessor(frame: VideoFrame): VideoFrame {
+        //handle your video frame.
+        val newFrame: VideoFrame = handleYourVideoFrame(frame)
+        return newFrame;
+    }
+})
+val videoTrack: VideoTrack = ...
+videoTrack.addSink(proxy)
+```
+### 支持VideoProcessor针对NV21格式数据进行叠图功能，添加基础类
+
+效果展示：左上角有个![](https://github.com/shenbengit/WebRTCExtension/blob/master/app/src/main/res/drawable/aaa.png)图片。   
+
+![](https://github.com/shenbengit/WebRTCExtension/blob/master/screenshots/overlay.gif)
+
+- [Android端WebRTC本地音视频采集流程源码分析](https://www.jianshu.com/p/7dc1a6a9d9fd)    
+- [NV21数据处理——实现剪裁，叠图](https://www.jianshu.com/p/9ef94aff13d9)
+
+
+**注意事项**
+> 1、目前视频数据格式仅支持NV21；    
+> 2、如需使用此Api，则VideoCapturer仅支持**Camera1Capturer**，其他类型的VideoCapturer返回的不是NV21格式的数据；  
+  
+创建**CameraVideoCapturer**   
+```kotlin
+private fun createVideoCapture(context: Context): CameraVideoCapturer? {
+    val enumerator: CameraEnumerator =
+//      if (Camera2Enumerator.isSupported(context)) {
+//           Camera2Enumerator(context)
+//      } else {
+            //使用Camera1 且captureToTexture=false ，则返回的视频格式是org.webrtc.NV21Buffer。
+            Camera1Enumerator(false)
+//      }
+    for (name in enumerator.deviceNames) {
+        if (enumerator.isFrontFacing(name)) {
+            return enumerator.createCapturer(name, null)
+        }
+    }
+    for (name in enumerator.deviceNames) {
+        if (enumerator.isBackFacing(name)) {
+            return enumerator.createCapturer(name, null)
+        }
+    }
+    return null
+}
+```
+快速实现叠图功能(**OverlayNV21VideoProcessor**)    
+> 在nv21数据上进行叠图操作，已经处理不同方向[VideoFrame.rotation]的操作，始终以左上角为起始点；
+```kotlin
+val videoSource = peerConnectionFactory.createVideoSource(capture.isScreencast)
+val bitmap = BitmapFactory.decodeResource(resources, R.drawable.aaa)
+val nv12Buffer = Nv21BufferUtil.argb8888BitmapToNv21Buffer(bitmap, true)
+//二次处理视频帧数据，叠图
+videoSource.setVideoProcessor(
+    OverlayNV21VideoProcessor(
+        overlayNv21Buffer = nv12Buffer,
+        left = 50,
+        top = 50,
+        //是否存在透明部分的数据，尽量使用不带透明数据的，透明数据处理比较耗时。
+        hasTransparent = true
+    )
+ )
+```
+
+基类**BaseNV21VideoProcessor**    
+仅处理[NV21Buffer]格式数据基类，会使用反射拿到[NV21Buffer.data]；    
+若您想自行处理，可以继承BaseNV21VideoProcessor，从而快速实现。
+```kotlin 
+class MyNV21VideoProcessor : BaseNV21VideoProcessor() {
+    /**
+     * 处理NV21数据
+     *
+     * @param nv21      原始nv21数据，请直接修改此数组的数据，会二次使用
+     * @param width     原始nv21数据的宽
+     * @param height    原始nv21数据的高
+     * @param rotation  原始nv21数据的方向
+     *
+     * @return 是否处理完成；ture:发送[nv21]，false:则按照原有的流程处理
+     */
+    override fun handleNV21(nv21: ByteArray, width: Int, height: Int, rotation: Int): Boolean {
+        //handle nv21 data
+        return true
+    }
+}
+
+...
+val videoSource = peerConnectionFactory.createVideoSource(capture.isScreencast)
+videoSource.setVideoProcessor(MyNV21VideoProcessor())
+```
+**NV21Util**  
+NV21数据操作相关方法
+```java
+//nv21数据剪裁
+byte[] cropNv21 = NV21Util.cropNV21(@NonNull byte[] src, int srcWidth, int srcHeight, int clipWidth, int clipHeight, int left, int top);
+//叠图，会否超出范围，超出进行剪裁
+NV21Util.overlayNV21(@NonNull byte[] nv21, int width, int height, int left, int top, @NonNull byte[] overlayNv21, int overlayWidth, int overlayHeight, boolean transparent);
+```
+
+**Nv21BufferUtil**   
+转换Nv21Buffer相关方法，使用了库[libyuv-android](https://github.com/crow-misia/libyuv-android)    
+```kotlin
+//Bitmap.Config.ARGB_8888 格式bitmap转Nv21Buffer
+val nv21Buffer: Nv21Buffer = Nv21BufferUtil.argb8888BitmapToNv21Buffer(bitmap: Bitmap, recycleBitmap: Boolean = false)
+//Bitmap.Config.RGB_565 格式bitmap转Nv21Buffer
+val nv21Buffer: Nv21Buffer = Nv21BufferUtil.rgb565BitmapToNv21Buffer(bitmap: Bitmap, recycleBitmap: Boolean = false)
+//nv21 ByteArray转Nv21Buffer
+val nv21Buffer: Nv21Buffer = Nv21BufferUtil.nv21ByteArrayToNv21Buffer(nv21: ByteArray, width: Int, height: Int)
+```
+都看到这儿了，还不给个**star**！
 # [License](https://github.com/shenbengit/WebRTCExtension/blob/master/LICENSE)
