@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -22,6 +23,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        dataBinding = true
+    }
 }
 
 dependencies {
@@ -34,5 +45,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation 'org.webrtc:google-webrtc:1.0.32006'
 //    implementation 'com.github.shenbengit:WebRTCExtension:1.0.3'
+    implementation 'com.github.shenbengit:MVVMKit:1.0.6'
     implementation project(path: ':extension-lib')
 }
