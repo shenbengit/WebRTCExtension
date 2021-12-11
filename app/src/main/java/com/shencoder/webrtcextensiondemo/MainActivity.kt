@@ -64,6 +64,8 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
         mBinding.etUrl.setText(URL)
         mBinding.svr.run {
             init(eglBaseContext, null)
+            //垂直镜像
+//            setMirrorVertically(false)
             //旋转方向
 //            setRotationAngle(RotationAngle.ANGLE_0)
         }
@@ -154,7 +156,14 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
             val bitmap = BitmapFactory.decodeResource(resources, R.drawable.aaa)
             val nv12Buffer = Nv21BufferUtil.argb8888BitmapToNv21Buffer(bitmap, true)
             //二次处理视频帧数据，叠图
-            videoSource.setVideoProcessor(OverlayNV21VideoProcessor(nv12Buffer, 50, 50, true))
+            videoSource.setVideoProcessor(
+                OverlayNV21VideoProcessor(
+                    overlayNv21Buffer = nv12Buffer,
+                    left = 50,
+                    top = 50,
+                    hasTransparent = true
+                )
+            )
             videoTrack =
                 peerConnectionFactory.createVideoTrack("local_video_track", videoSource).apply {
                     addSink(proxyVideoSink)
