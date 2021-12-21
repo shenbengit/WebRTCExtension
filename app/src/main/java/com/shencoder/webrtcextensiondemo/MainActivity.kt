@@ -171,7 +171,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
             surfaceTextureHelper =
                 SurfaceTextureHelper.create("surface_texture_thread", eglBaseContext)
             capture.initialize(surfaceTextureHelper, this, videoSource.capturerObserver)
-            capture.startCapture(640, 480, 20)
+            capture.startCapture(1920, 1080, 30)
         }
 
         val rtcConfig = PeerConnection.RTCConfiguration(emptyList())
@@ -270,12 +270,11 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
 
     private fun createVideoCapture(context: Context): CameraVideoCapturer? {
         val enumerator: CameraEnumerator =
-//            if (Camera2Enumerator.isSupported(context)) {
-//            Camera2Enumerator(context)
-//        } else {
-            //使用Camera1 且captureToTexture=false ，则返回的视频格式是org.webrtc.NV21Buffer。
-            Camera1Enumerator(false)
-//        }
+            if (Camera2Enumerator.isSupported(context)) {
+                Camera2Enumerator(context)
+            } else {
+                Camera1Enumerator()
+            }
         for (name in enumerator.deviceNames) {
             if (enumerator.isFrontFacing(name)) {
                 return enumerator.createCapturer(name, null)
