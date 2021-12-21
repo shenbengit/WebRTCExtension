@@ -1,14 +1,15 @@
 package com.shencoder.webrtcextension
 
 import androidx.annotation.CallSuper
+import io.github.crow_misia.libyuv.I420Buffer
+import io.github.crow_misia.libyuv.Nv21Buffer
+import io.github.crow_misia.libyuv.convertTo
 import org.webrtc.*
+import java.nio.ByteBuffer
 
 /**
- * 仅处理[NV21Buffer]格式数据基类，会使用反射拿到[NV21Buffer.data]；
- * 如果想使用此类，则需要[Camera1Enumerator.captureToTexture]是false，
- * 即[Camera1Capturer.captureToTexture]为false
  *
- * you must be call [Camera1Enumerator(false)]
+ * [VideoFrame.getBuffer]->[VideoFrame.I420Buffer]->[I420Buffer]->[Nv21Buffer]->processing data->[VideoFrame]
  *
  * @author  ShenBen
  * @date    2021/12/6 08:44
@@ -33,47 +34,87 @@ abstract class BaseNV21VideoProcessor : VideoProcessor {
 
     }
 
-    /**
-     * 此方法会间接调用[NV21Buffer.cropAndScale]转为[VideoFrame.I420Buffer]，所以要在super之前处理
-     */
-    final override fun onFrameCaptured(
-        frame: VideoFrame,
-        parameters: VideoProcessor.FrameAdaptationParameters
-    ) {
-        if (parameters.drop) {
-            //直接丢弃
+    final override fun onFrameCaptured(frame: VideoFrame) {
+        val buffer = frame.buffer
+        val width = buffer.width
+        val height = buffer.height
+        //先转成VideoFrame.I420Buffer格式，这个转换可能比较耗时，5-8ms左右
+        //如果由TextureBuffer转成I420Buffer，并不是一个标准的YUV420P格式，还需要二次转换
+        val toI420 = buffer.toI420()
+
+        val planes = arrayOf<ByteBuffer>(toI420.dataY, toI420.dataU, toI420.dataV)
+        val strides = intArrayOf(toI420.strideY, toI420.strideU, toI420.strideV)
+
+        val halfWidth = (width + 1).shr(1)
+        val halfHeight = (height + 1).shr(1)
+
+        val capacity = width * height
+        val halfCapacity = (halfWidth + 1).shr(1) * height
+
+        val planeWidths = intArrayOf(width, halfWidth, halfWidth)
+        val planeHeights = intArrayOf(height, halfHeight, halfHeight)
+
+        //使用Jni方法生成，后面释放，避免吃满内存
+        val byteBuffer = JniCommon.nativeAllocateByteBuffer(capacity + halfCapacity + halfCapacity)
+
+        //数量为3,分别对应Y、U、V
+        for (i in 0..2) {
+            if (strides[i] == planeWidths[i]) {
+                //这里一般是Y分量
+                byteBuffer.put(planes[i])
+            } else {
+                val sliceLengths = planeWidths[i] * planeHeights[i]
+
+                val limit = byteBuffer.position() + sliceLengths
+                byteBuffer.limit(limit)
+
+                //这里一般是UV分量
+                //使用byteBuffer.slice()生成的ByteBuffer，和源ByteBuffer数据相互影响
+                val copyBuffer = byteBuffer.slice()
+
+                YuvHelper.copyPlane(
+                    planes[i],
+                    strides[i],
+                    copyBuffer,
+                    planeWidths[i],
+                    planeWidths[i],
+                    planeHeights[i]
+                )
+                byteBuffer.position(limit)
+            }
+        }
+
+        //标准的I420格式
+        val newI420Buffer = I420Buffer.wrap(byteBuffer, width, height) {
+            JniCommon.nativeFreeByteBuffer(byteBuffer)
+            toI420.release()
+        }
+
+        //通过I420转成NV21
+        val nv21Buffer = Nv21Buffer.allocate(width, height)
+        newI420Buffer.convertTo(nv21Buffer)
+        val nv21ByteArray = nv21Buffer.asByteArray()
+
+        newI420Buffer.close()
+        nv21Buffer.close()
+
+        //处理nv21数据是否成功
+        val success = handleNV21(nv21ByteArray, width, height, frame.rotation)
+        if (success.not()) {
+            //将处理好的VideoFrame发送出去
+            mSink?.onFrame(frame)
             return
         }
-        val buffer = frame.buffer
-        if (buffer is NV21Buffer) {
-            //进处理NV21Buffer
-            //通过反射拿到[NV21Buffer.data]
-            val nv21Class = buffer::class.java
-            val declaredField = nv21Class.getDeclaredField("data")
-            declaredField.isAccessible = true
-            val bytes = declaredField.get(buffer) as ByteArray
-            val nv21Bytes: ByteArray = checkNV21ByteArray(bytes, buffer.width, buffer.height)
-            //处理nv21数据是否成功
-            val success = handleNV21(nv21Bytes, buffer.width, buffer.height, frame.rotation)
-            if (success.not()) {
-                super.onFrameCaptured(frame, parameters)
-                return
-            }
-            //将处理好的nv21数据转换为NV21Buffer，传给VideoFrame
-            val nv21Buffer = NV21Buffer(nv21Bytes, buffer.width, buffer.height, null)
-            val videoFrame = VideoFrame(nv21Buffer, frame.rotation, frame.timestampNs)
-            //调用super方法，传入新生成的VideoFrame
-            super.onFrameCaptured(videoFrame, parameters)
-            videoFrame.release()
-        } else {
-            super.onFrameCaptured(frame, parameters)
-        }
-    }
-
-    @CallSuper
-    override fun onFrameCaptured(frame: VideoFrame) {
+        //将处理好的nv21数据转换为NV21Buffer，传给VideoFrame
+        val videoFrame = VideoFrame(
+            NV21Buffer(nv21ByteArray, width, height, null),
+            frame.rotation,
+            frame.timestampNs
+        )
         //将处理好的VideoFrame发送出去
-        mSink?.onFrame(frame)
+        mSink?.onFrame(videoFrame)
+
+        videoFrame.release()
     }
 
     /**

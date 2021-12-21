@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    compileSdk 30
+    compileSdk 31
 
     defaultConfig {
         minSdk 21
-        targetSdk 30
+        targetSdk 31
         versionCode 1
         versionName "1.0.0"
 
@@ -25,12 +25,11 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
-
 }
 
 dependencies {
     compileOnly 'androidx.annotation:annotation:1.3.0'
-    compileOnly 'org.webrtc:google-webrtc:1.0.32006'
+    implementation 'org.webrtc:google-webrtc:1.0.32006'
     api "io.github.crow-misia.libyuv:libyuv-android:0.13.0"
 }
 
@@ -47,7 +46,7 @@ afterEvaluate {
                 // You can then customize attributes of the publication as shown below.
                 groupId = 'com.shencoder'
                 artifactId = 'webrtcextension'
-                version = '1.0.4'
+                version = '1.0.5'
             }
         }
     }
