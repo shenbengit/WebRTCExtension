@@ -177,34 +177,6 @@ videoTrack.addSink(proxy)
 - [Android端WebRTC本地音视频采集流程源码分析](https://www.jianshu.com/p/7dc1a6a9d9fd)    
 - [NV21数据处理——实现剪裁，叠图](https://www.jianshu.com/p/9ef94aff13d9)
 
-
-**注意事项**
-> 1、目前视频数据格式仅支持NV21；    
-> 2、如需使用此Api，则VideoCapturer仅支持**Camera1Capturer**，其他类型的VideoCapturer返回的不是NV21格式的数据；  
-  
-创建**CameraVideoCapturer**   
-```kotlin
-private fun createVideoCapture(context: Context): CameraVideoCapturer? {
-    val enumerator: CameraEnumerator =
-//      if (Camera2Enumerator.isSupported(context)) {
-//           Camera2Enumerator(context)
-//      } else {
-            //使用Camera1 且captureToTexture=false ，则返回的视频格式是org.webrtc.NV21Buffer。
-            Camera1Enumerator(false)
-//      }
-    for (name in enumerator.deviceNames) {
-        if (enumerator.isFrontFacing(name)) {
-            return enumerator.createCapturer(name, null)
-        }
-    }
-    for (name in enumerator.deviceNames) {
-        if (enumerator.isBackFacing(name)) {
-            return enumerator.createCapturer(name, null)
-        }
-    }
-    return null
-}
-```
 快速实现叠图功能(**OverlayNV21VideoProcessor**)    
 > 在nv21数据上进行叠图操作，已经处理不同方向[VideoFrame.rotation]的操作，始终以左上角为起始点；
 ```kotlin
@@ -223,8 +195,7 @@ videoSource.setVideoProcessor(
  )
 ```
 
-基类**BaseNV21VideoProcessor**    
-仅处理[NV21Buffer]格式数据基类，会使用反射拿到[NV21Buffer.data]；    
+基类**BaseNV21VideoProcessor**      
 若您想自行处理，可以继承BaseNV21VideoProcessor，从而快速实现。
 ```kotlin 
 class MyNV21VideoProcessor : BaseNV21VideoProcessor() {
