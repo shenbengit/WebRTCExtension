@@ -105,7 +105,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
 
                 override fun isSupportedH264(info: MediaCodecInfo): Boolean {
                     //自行判断是否支持H264编码
-                    return true
+                    return false
                 }
             })
         audioDeviceModule = JavaAudioDeviceModule.builder(this)
@@ -191,7 +191,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
             surfaceTextureHelper =
                 SurfaceTextureHelper.create("surface_texture_thread", eglBaseContext)
             capture.initialize(surfaceTextureHelper, this, videoSource.capturerObserver)
-            capture.startCapture(1920, 1080, 30)
+            capture.startCapture(720, 640, 20)
         }
 
         val rtcConfig = PeerConnection.RTCConfiguration(emptyList())
