@@ -34,9 +34,8 @@ public class CustomHardwareVideoEncoderFactory implements VideoEncoderFactory {
     private static final int QCOM_VP8_KEY_FRAME_INTERVAL_ANDROID_M_MS = 20000;
     private static final int QCOM_VP8_KEY_FRAME_INTERVAL_ANDROID_N_MS = 15000;
     /**
-     * 支持对OMX.google 的匹配 ，如：OMX.google.h264.encoder
-     * 主要是为了解决对华为手机的支持
-     * 华为海思：OMX.hisi.video.encoder.avc 进行H264编码有问题
+     * 默认支持对OMX.google.xxx 的匹配 ，如：OMX.google.h264.encoder
+     * 目前大部分手机都支持OMX.google.xxx ；
      */
     static final String GOOGLE_PREFIX = "OMX.google.";
 
@@ -267,7 +266,7 @@ public class CustomHardwareVideoEncoderFactory implements VideoEncoderFactory {
         boolean isSupported = (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) ||
                 // Exynos H264 encoder is supported in LOLLIPOP or later.
                 (name.startsWith(EXYNOS_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ||
-                //解决华为手机使用海思（OMX.hisi.video.encoder.avc）无法正常编码的问题，使用OMX.google.h264.encoder
+                //目前大部分手机都支持OMX.google.xxx，添加默认支持
                 (name.startsWith(GOOGLE_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         if (isSupported) {
             return true;

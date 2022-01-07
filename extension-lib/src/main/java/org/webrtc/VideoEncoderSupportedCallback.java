@@ -36,6 +36,8 @@ public interface VideoEncoderSupportedCallback {
      * 注意当前{@link android.os.Build.VERSION#SDK_INT} 是否支持
      * {@link CustomHardwareVideoEncoderFactory#isHardwareSupportedInCurrentSdkH264(MediaCodecInfo)}
      *
+     * 注意：华为手机海思（OMX.hisi.video.encoder.avc）尽量不要使用，H264编码有问题。
+     *
      * @param info 编码器信息
      * @return 是否支持H264
      */
