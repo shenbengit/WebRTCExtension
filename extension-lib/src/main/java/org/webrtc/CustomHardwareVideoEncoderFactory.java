@@ -33,6 +33,12 @@ public class CustomHardwareVideoEncoderFactory implements VideoEncoderFactory {
     private static final int QCOM_VP8_KEY_FRAME_INTERVAL_ANDROID_L_MS = 15000;
     private static final int QCOM_VP8_KEY_FRAME_INTERVAL_ANDROID_M_MS = 20000;
     private static final int QCOM_VP8_KEY_FRAME_INTERVAL_ANDROID_N_MS = 15000;
+    /**
+     * 支持对OMX.google 的匹配 ，如：OMX.google.h264.encoder
+     * 主要是为了解决对华为手机的支持
+     * 华为海思：OMX.hisi.video.encoder.avc 进行H264编码有问题
+     */
+    static final String GOOGLE_PREFIX = "OMX.google.";
 
     // List of devices with poor H.264 encoder quality.
     // HW H.264 encoder on below devices has poor bitrate control - actual
@@ -169,9 +175,10 @@ public class CustomHardwareVideoEncoderFactory implements VideoEncoderFactory {
         return supportedCodecInfos.toArray(new VideoCodecInfo[0]);
     }
 
-    private @Nullable
-    MediaCodecInfo findCodecForType(VideoCodecMimeType type) {
-        for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
+    @Nullable
+    private MediaCodecInfo findCodecForType(VideoCodecMimeType type) {
+        int codecCount = MediaCodecList.getCodecCount();
+        for (int i = 0; i < codecCount; ++i) {
             MediaCodecInfo info = null;
             try {
                 info = MediaCodecList.getCodecInfoAt(i);
@@ -187,7 +194,8 @@ public class CustomHardwareVideoEncoderFactory implements VideoEncoderFactory {
                 return info;
             }
         }
-        return null; // No support for this type.
+        // No support for this type.
+        return null;
     }
 
     // Returns true if the given MediaCodecInfo indicates a supported encoder for the given type.
@@ -256,10 +264,11 @@ public class CustomHardwareVideoEncoderFactory implements VideoEncoderFactory {
         }
         String name = info.getName();
         // QCOM H264 encoder is supported in KITKAT or later.
-        boolean isSupported = (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+        boolean isSupported = (name.startsWith(QCOM_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) ||
                 // Exynos H264 encoder is supported in LOLLIPOP or later.
-                || (name.startsWith(EXYNOS_PREFIX)
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
+                (name.startsWith(EXYNOS_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ||
+                //解决华为手机使用海思（OMX.hisi.video.encoder.avc）无法正常编码的问题，使用OMX.google.h264.encoder
+                (name.startsWith(GOOGLE_PREFIX) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
         if (isSupported) {
             return true;
         } else {
