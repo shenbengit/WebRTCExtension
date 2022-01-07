@@ -1,11 +1,14 @@
 package com.shencoder.webrtcextensiondemo
 
+import android.Manifest
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.media.MediaCodecInfo
 import android.os.Bundle
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.elvishew.xlog.XLog
+import com.permissionx.guolindev.PermissionX
 import com.shencoder.mvvmkit.base.view.BaseSupportActivity
 import com.shencoder.mvvmkit.base.viewmodel.DefaultViewModel
 import com.shencoder.mvvmkit.util.MoshiUtil
@@ -25,6 +28,7 @@ import org.koin.android.ext.android.inject
 import org.webrtc.*
 import org.webrtc.audio.JavaAudioDeviceModule
 import org.webrtc.audio.setAudioTrackSamplesReadyCallback
+import java.util.*
 
 /**
  * 事例demo
@@ -83,7 +87,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
                 toastWarning("请输入拉流地址")
                 return@setOnClickListener
             }
-            initPushRTC(url)
+            requestPermission(url)
         }
     }
 
@@ -92,11 +96,11 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
         val encoderFactory = createCustomVideoEncoderFactory(eglBaseContext, true, true,
             object : VideoEncoderSupportedCallback {
                 override fun isSupportedVp8(info: MediaCodecInfo): Boolean {
-                    return true
+                    return false
                 }
 
                 override fun isSupportedVp9(info: MediaCodecInfo): Boolean {
-                    return true
+                    return false
                 }
 
                 override fun isSupportedH264(info: MediaCodecInfo): Boolean {
@@ -144,6 +148,22 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
             .createPeerConnectionFactory()
     }
 
+    private fun requestPermission(url: String) {
+        PermissionX.init(this)
+            .permissions(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO
+            )
+            .request { allGranted: Boolean, grantedList: List<String?>?, deniedList: List<String?>? ->
+                if (allGranted) {
+                    initPushRTC(url)
+                } else {
+                    Toast.makeText(this, "请授予所有权限！", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
 
     private fun initPushRTC(url: String) {
         val createAudioSource = peerConnectionFactory.createAudioSource(createAudioConstraints())

@@ -49,5 +49,6 @@ dependencies {
     implementation 'org.webrtc:google-webrtc:1.0.32006'
 //    implementation 'com.github.shenbengit:WebRTCExtension:1.0.3'
     implementation 'com.github.shenbengit:MVVMKit:1.0.6'
+    implementation 'com.guolindev.permissionx:permissionx:1.6.1'
     implementation project(path: ':extension-lib')
 }
