@@ -5,7 +5,7 @@ Android端WebRTC一些扩展方法:
 - 2、支持自定义是否启用H264、VP8、VP9编码；    
 - 3、自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；  
 - 4、添加VideoSink代理类(ProxyVideoSink)；    
-- 5、支持VideoProcessor针对NV21格式数据进行叠图功能，添加基础类；
+- 5、支持VideoProcessor针对视频数据进行二次处理，如叠图功能，添加基础类；
 
 示例中的[demo](https://github.com/shenbengit/WebRTCExtension/tree/master/app)需要使用[SRS视频服务器](https://github.com/ossrs/srs)，具体搭建过程详见SRS官方文档。    
 > 其他Android端WebRTC结合SRS使用示例，详见[WebRTC-SRS](https://github.com/shenbengit/WebRTC-SRS)，完整示例：私聊、群聊、聊天室功能详见[SrsRtcAndroidClient](https://github.com/shenbengit/SrsRtcAndroidClient)。
