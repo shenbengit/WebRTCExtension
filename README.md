@@ -5,10 +5,10 @@ Android端WebRTC一些扩展方法:
 - 2、支持自定义是否启用H264、VP8、VP9编码；    
 - 3、自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；  
 - 4、添加VideoSink代理类(ProxyVideoSink)；    
-- 5、支持VideoProcessor针对NV21格式数据进行叠图功能，添加基础类；
+- 5、支持VideoProcessor针对视频数据进行二次处理，如叠图功能，添加基础类；
 
 示例中的[demo](https://github.com/shenbengit/WebRTCExtension/tree/master/app)需要使用[SRS视频服务器](https://github.com/ossrs/srs)，具体搭建过程详见SRS官方文档。    
-> 其他Android端WebRTC结合SRS使用示例，详见[WebRTC-SRS](https://github.com/shenbengit/WebRTC-SRS)。
+> 其他Android端WebRTC结合SRS使用示例，详见[WebRTC-SRS](https://github.com/shenbengit/WebRTC-SRS)，完整示例：私聊、群聊、聊天室功能详见[SrsRtcAndroidClient](https://github.com/shenbengit/SrsRtcAndroidClient)。
 
 ## 引入
 ### 将JitPack存储库添加到您的项目中(项目根目录下build.gradle文件)
@@ -239,4 +239,10 @@ val nv21Buffer: Nv21Buffer = Nv21BufferUtil.rgb565BitmapToNv21Buffer(bitmap: Bit
 val nv21Buffer: Nv21Buffer = Nv21BufferUtil.nv21ByteArrayToNv21Buffer(nv21: ByteArray, width: Int, height: Int)
 ```
 都看到这儿了，还不给个**star**！
+## 作者其他的开源项目
+- 基于RecyclerView实现网格分页布局：[PagerGridLayoutManager](https://github.com/shenbengit/PagerGridLayoutManager)
+- 基于Netty封装UDP收发工具：[UdpNetty](https://github.com/shenbengit/UdpNetty)
+- Android端基于JavaCV实现人脸检测功能：[JavaCV-FaceDetect](https://github.com/shenbengit/JavaCV-FaceDetect)
+- 使用Kotlin搭建Android MVVM快速开发框架：[MVVMKit](https://github.com/shenbengit/MVVMKit)
+
 # [License](https://github.com/shenbengit/WebRTCExtension/blob/master/LICENSE)
