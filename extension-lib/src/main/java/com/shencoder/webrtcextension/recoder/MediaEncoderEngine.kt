@@ -12,7 +12,7 @@ import java.io.File
  * @date    2022/3/17 16:55
  * @email   714081644@qq.com
  */
- class MediaEncoderEngine @JvmOverloads constructor(
+class MediaEncoderEngine @JvmOverloads constructor(
     /**
      * 录音文件
      */
@@ -101,7 +101,6 @@ import java.io.File
      */
     fun stop() {
         mEncoders.forEach { it.stop() }
-
         mListener?.onEncodingStop()
     }
 
@@ -175,7 +174,7 @@ import java.io.File
          * 在[isStarted]之后
          */
         fun write(buffer: OutputBuffer) {
-            mMediaMuxer.writeSampleData(buffer.trackIndex, buffer.data, buffer.info)
+            mMediaMuxer.writeSampleData(buffer.trackIndex, buffer.data!!, buffer.info!!)
         }
 
         /**

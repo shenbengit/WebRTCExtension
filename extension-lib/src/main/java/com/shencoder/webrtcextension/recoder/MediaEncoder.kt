@@ -43,11 +43,22 @@ abstract class MediaEncoder(protected val encoderName: String) {
     private lateinit var mController: MediaEncoderEngine.Controller
     protected lateinit var mWorker: WorkerHandler
 
-    private val mTrackIndex = 0
+    private var mTrackIndex = 0
 
-    protected lateinit var mMediaCodec: MediaCodec
+    /**
+     * 编码器
+     */
+    protected var mMediaCodec: MediaCodec? = null
 
-    protected abstract fun getEncodedBitRate(): Int
+    private val mOutputBufferPool = OutputBufferPool()
+
+    private var mStartTimeMillis: Long = 0 // In System.currentTimeMillis()
+
+    @Volatile
+    private var mFirstTimeUs = Long.MIN_VALUE // In unknown reference
+
+    @Volatile
+    private var mLastTimeUs: Long = 0
 
     fun prepare(controller: MediaEncoderEngine.Controller) {
         mController = controller
@@ -116,13 +127,132 @@ abstract class MediaEncoder(protected val encoderName: String) {
     @CallSuper
     protected open fun onStopped() {
         mController.notifyStopped(mTrackIndex)
-        mMediaCodec.stop()
-        mMediaCodec.release()
+        mMediaCodec?.run {
+            stop()
+            release()
+        }
 //        mOutputBufferPool.clear()
 //        mOutputBufferPool = null
         mBuffers = null
         setState(STATE_STOPPED)
         mWorker.destroy()
+    }
+
+    /**
+     * 这个方法必须在初始化[mMediaCodec]之后
+     */
+    protected fun initMediaCodecBuffers() {
+        mBuffers = MediaCodecBuffers(mMediaCodec!!)
+    }
+
+    protected fun tryAcquireInputBuffer(holder: InputBuffer): Boolean {
+        val codec = mMediaCodec ?: return false
+        val buffers = mBuffers ?: return false
+
+        val inputBufferIndex = codec.dequeueInputBuffer(INPUT_TIMEOUT_US)
+        return if (inputBufferIndex < 0) {
+            false
+        } else {
+            holder.inputBufferIndex = inputBufferIndex
+            holder.data = buffers.getInputBuffer(inputBufferIndex)
+            true
+        }
+    }
+
+    protected fun acquireInputBuffer(holder: InputBuffer) {
+        while (!tryAcquireInputBuffer(holder)) {
+        }
+    }
+
+    protected fun encodeInputBuffer(buffer: InputBuffer) {
+        val codec = mMediaCodec ?: return
+        if (buffer.isEndOfStream) { // send EOS
+            codec.queueInputBuffer(
+                buffer.inputBufferIndex, 0, 0,
+                buffer.timestamp, MediaCodec.BUFFER_FLAG_END_OF_STREAM
+            )
+        } else {
+            codec.queueInputBuffer(
+                buffer.inputBufferIndex, 0, buffer.dataLength,
+                buffer.timestamp, 0
+            )
+        }
+    }
+
+    /**
+     * @param drainAll whether to drain all
+     */
+    protected fun drainOutput(drainAll: Boolean) {
+        val codec = mMediaCodec ?: return
+        val buffers = mBuffers ?: return
+
+        while (true) {
+            val encoderStatus = codec.dequeueOutputBuffer(
+                mBufferInfo,
+                OUTPUT_TIMEOUT_US
+            )
+            if (encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                if (!drainAll) {
+                    break
+                }
+            } else if (encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
+                buffers.onOutputBuffersChanged()
+            } else if (encoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                // should happen before receiving buffers, and should only happen once
+                if (mController.isStarted()) {
+                    throw RuntimeException("MediaFormat changed twice.")
+                }
+                val outputFormat = codec.outputFormat
+                mTrackIndex = mController.notifyStarted(outputFormat)
+                setState(STATE_STARTED)
+            } else if (encoderStatus < 0) {
+                //忽略
+            } else {
+                val encodedData = buffers.getOutputBuffer(encoderStatus)!!
+
+                val isCodecConfig = (mBufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0
+                if (!isCodecConfig && mController.isStarted() && mBufferInfo.size != 0) {
+
+                    encodedData.position(mBufferInfo.offset)
+                    encodedData.limit(mBufferInfo.offset + mBufferInfo.size)
+
+
+                    if (mFirstTimeUs == Long.MIN_VALUE) {
+                        mFirstTimeUs = mBufferInfo.presentationTimeUs
+                    }
+
+                    mLastTimeUs = mBufferInfo.presentationTimeUs
+
+                    mBufferInfo.presentationTimeUs =
+                        mStartTimeMillis * 1000 + mLastTimeUs - mFirstTimeUs
+
+                    val buffer = mOutputBufferPool.get()!!
+                    //noinspection ConstantConditions
+                    buffer.info = mBufferInfo
+                    buffer.trackIndex = mTrackIndex
+                    buffer.data = encodedData
+
+                    onWriteOutput(mOutputBufferPool, buffer)
+                }
+                codec.releaseOutputBuffer(encoderStatus, false)
+
+                if (mBufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                    //结束标识
+                    onStopped()
+                    break
+                }
+            }
+        }
+    }
+
+    protected fun notifyFirstFrameMillis(firstFrameMillis: Long) {
+        mStartTimeMillis = firstFrameMillis
+    }
+
+    @CallSuper
+    protected open fun onWriteOutput(pool: OutputBufferPool, buffer: OutputBuffer) {
+        mController.write(buffer)
+        pool.recycle(buffer)
     }
 
 
