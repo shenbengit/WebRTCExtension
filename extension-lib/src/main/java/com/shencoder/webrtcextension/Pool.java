@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Base class for thread-safe pools of recycleable objects.
+ *
  * @param <T> the object type
  */
 public class Pool<T> {
@@ -22,6 +23,7 @@ public class Pool<T> {
 
     /**
      * Used to create new instances of objects when needed.
+     *
      * @param <T> object type
      */
     public interface Factory<T> {
@@ -30,8 +32,9 @@ public class Pool<T> {
 
     /**
      * Creates a new pool with the given pool size and factory.
+     *
      * @param maxPoolSize the max pool size
-     * @param factory the factory
+     * @param factory     the factory
      */
     public Pool(int maxPoolSize, @NonNull Factory<T> factory) {
         this.maxPoolSize = maxPoolSize;
@@ -63,7 +66,7 @@ public class Pool<T> {
         synchronized (lock) {
             T item = queue.poll();
             if (item != null) {
-                activeCount++; // poll decreases, this fixes
+                ++activeCount; // poll decreases, this fixes
                 return item;
             }
 
@@ -71,7 +74,7 @@ public class Pool<T> {
                 return null;
             }
 
-            activeCount++;
+            ++activeCount;
             return factory.create();
         }
     }
@@ -84,7 +87,8 @@ public class Pool<T> {
      */
     public void recycle(@NonNull T item) {
         synchronized (lock) {
-            if (--activeCount < 0) {
+            --activeCount;
+            if (activeCount < 0) {
                 throw new IllegalStateException("Trying to recycle an item which makes " +
                         "activeCount < 0. This means that this or some previous items being " +
                         "recycled were not coming from this pool, or some item was recycled " +

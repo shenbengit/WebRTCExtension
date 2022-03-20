@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue
 class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
     JavaAudioDeviceModule.SamplesReadyCallback {
     private companion object {
-        private const val BYTE_RATE = 44100 * 2
+        private const val BYTE_RATE = 64 * 1024
     }
 
     private val mEncodingThread = AudioEncodingThread()
@@ -25,7 +25,8 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
 
     private val mInputBufferQueue = LinkedBlockingQueue<InputBuffer>()
 
-    private var mRequestStop = false
+    @Volatile
+    private var mHadStarted = false
 
     @Volatile
     private var mLastTimeUs: Long = 0
@@ -39,28 +40,28 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
     }
 
     override fun onStart() {
-        mRequestStop = false
+        if (mHadStarted) {
+            return
+        }
+        mHadStarted = true
         mEncodingThread.start()
     }
 
     override fun onStop() {
-        mRequestStop = true
-    }
-
-    override fun onStopped() {
-        super.onStopped()
-        mRequestStop = false
+        mHadStarted = false
     }
 
     override fun onWebRtcAudioRecordSamplesReady(simples: JavaAudioDeviceModule.AudioSamples) {
+        if (mHadStarted.not()) {
+            return
+        }
         var codec = mMediaCodec
         if (codec == null) {
             codec = initAudioEncoder(simples)
-            codec.start()
-
             mMediaCodec = codec
-
             initMediaCodecBuffers()
+
+            codec.start()
         }
 
         mWorker.post {
@@ -69,6 +70,8 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
                 val data = simples.data
                 buffer.source = data
                 buffer.dataLength = data.size
+                buffer.isEndOfStream = mHadStarted.not()
+
                 increaseTime(data.size)
                 buffer.timestamp = mLastTimeUs
                 mInputBufferQueue.add(buffer)
@@ -114,8 +117,11 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
             super.run()
 
             while (true) {
-                val inputBuffer = mInputBufferQueue.peek()
+                val inputBuffer = mInputBufferQueue.poll()
                 if (inputBuffer == null) {
+                    if (mHadStarted.not()) {
+                        break
+                    }
                     sleep(30)
                 } else {
                     if (inputBuffer.isEndOfStream) {

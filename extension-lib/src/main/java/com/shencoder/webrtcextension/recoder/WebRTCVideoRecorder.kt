@@ -84,7 +84,7 @@ class WebRTCVideoRecorder(
      * 视频帧数据
      */
     override fun onFrame(frame: VideoFrame) {
-        if (isRecording() && mEncoderEngineStarted) {
+        if (isRecording()) {
             mEncoderEngine.getVideoEncoder().onFrame(frame)
         }
     }
@@ -93,12 +93,13 @@ class WebRTCVideoRecorder(
      * 音频帧数据-pcm
      */
     override fun onWebRtcAudioRecordSamplesReady(simples: JavaAudioDeviceModule.AudioSamples) {
-        if (withAudio && isRecording() && mEncoderEngineStarted) {
+        if (withAudio && isRecording()) {
             mEncoderEngine.getAudioEncoder()?.onWebRtcAudioRecordSamplesReady(simples)
         }
     }
 
     override fun onEncodingStart() {
+        println("onEncodingStart--->")
         mEncoderEngineStarted = true
     }
 

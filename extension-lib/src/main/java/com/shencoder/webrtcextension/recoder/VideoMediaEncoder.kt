@@ -3,6 +3,7 @@ package com.shencoder.webrtcextension.recoder
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.os.Bundle
 import android.view.Surface
 import org.webrtc.*
 
@@ -41,24 +42,50 @@ class VideoMediaEncoder(private val sharedContext: EglBase.Context) : MediaEncod
      */
     private lateinit var surface: Surface
 
+    @Volatile
+    private var mSyncFrameFound = false
+
+    @Volatile
+    private var mFrameNumber = -1
+
     override fun onPrepare(controller: MediaEncoderEngine.Controller) {
 
     }
 
     override fun onStart() {
-
+        mFrameNumber = 0
     }
 
     override fun onStop() {
+        mFrameNumber = -1
         mMediaCodec?.signalEndOfInputStream()
         drainOutput(true)
     }
 
+    override fun onStopped() {
+        super.onStopped()
+        if (this::surface.isInitialized) {
+            surface.release()
+        }
+        eglBase.release()
+        glDrawer.release()
+        frameDrawer.release()
+    }
+
     override fun onFrame(frame: VideoFrame) {
         mWorker.post {
+            val timestampUs = frame.timestampNs / (1000 * 1000)
+            if (shouldRenderFrame(timestampUs).not()) {
+                return@post
+            }
             frame.retain()
             val videoWidth = frame.rotatedWidth
             val videoHeight = frame.rotatedHeight
+
+            //通知我们得到第一帧及其绝对时间
+            if (mFrameNumber == 1) {
+                notifyFirstFrameMillis(timestampUs)
+            }
 
             var codec = mMediaCodec
             if (codec == null) {
@@ -66,23 +93,40 @@ class VideoMediaEncoder(private val sharedContext: EglBase.Context) : MediaEncod
 
                 //请求Surface用作编码器的输入，而不是输入缓冲区。
                 surface = codec.createInputSurface()
-
                 eglBase.createSurface(surface)
-                codec.start()
-
                 eglBase.makeCurrent()
+
+                mMediaCodec = codec
                 initMediaCodecBuffers()
+
+                codec.start()
             }
+
+            drainOutput(false)
 
             frameDrawer.drawFrame(frame, glDrawer, null, 0, 0, videoWidth, videoHeight)
             frame.release()
-
-//            drainVideoEncoder()
             eglBase.swapBuffers()
-
         }
     }
 
+    override fun onWriteOutput(pool: OutputBufferPool, buffer: OutputBuffer) {
+        if (!mSyncFrameFound) {
+            val flag = MediaCodec.BUFFER_FLAG_KEY_FRAME
+            val hasFlag = (buffer.info!!.flags and flag) == flag
+            if (hasFlag) {
+                mSyncFrameFound = true
+                super.onWriteOutput(pool, buffer)
+            } else {
+                val params = Bundle()
+                params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+                mMediaCodec?.setParameters(params)
+                pool.recycle(buffer)
+            }
+        } else {
+            super.onWriteOutput(pool, buffer)
+        }
+    }
 
     private fun initVideoEncoder(videoWidth: Int, videoHeight: Int, rotation: Int): MediaCodec {
         //h.264
@@ -110,4 +154,10 @@ class VideoMediaEncoder(private val sharedContext: EglBase.Context) : MediaEncod
         return encoder
     }
 
+    private fun shouldRenderFrame(timestampUs: Long): Boolean {
+        if (timestampUs == 0L) return false
+        if (mFrameNumber < 0) return false
+        mFrameNumber++
+        return true
+    }
 }

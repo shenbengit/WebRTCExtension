@@ -24,30 +24,4 @@ class InputBuffer {
      * 是否是最后一个流
      */
     var isEndOfStream: Boolean = false
-
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as InputBuffer
-
-        if (source != null) {
-            if (other.source == null) return false
-            if (!source.contentEquals(other.source)) return false
-        } else if (other.source != null) return false
-        if (data != other.data) return false
-        if (isEndOfStream != other.isEndOfStream) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = source?.contentHashCode() ?: 0
-        result = 31 * result + (data?.hashCode() ?: 0)
-        result = 31 * result + isEndOfStream.hashCode()
-        return result
-    }
-
-
 }

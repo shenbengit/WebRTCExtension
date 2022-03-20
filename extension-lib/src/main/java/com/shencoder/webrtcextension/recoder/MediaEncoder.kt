@@ -25,8 +25,8 @@ abstract class MediaEncoder(protected val encoderName: String) {
         private const val STATE_STOPPED = 7
 
 
-        private const val INPUT_TIMEOUT_US = 0L
-        private const val OUTPUT_TIMEOUT_US = 0L
+        private const val INPUT_TIMEOUT_US = 100L
+        private const val OUTPUT_TIMEOUT_US = 100L
 
     }
 
@@ -92,10 +92,6 @@ abstract class MediaEncoder(protected val encoderName: String) {
     }
 
     /**
-     * 调用以在开始之前准备此编码器。任何初始化都应该在这里完成，因为它不会干扰原始线程
-     *
-     * 此时子类必须创建[mMediaCodec]对象
-     *
      * @param controller the muxer controller
      */
     @EncoderThread
@@ -235,7 +231,9 @@ abstract class MediaEncoder(protected val encoderName: String) {
                     onWriteOutput(mOutputBufferPool, buffer)
                 }
                 codec.releaseOutputBuffer(encoderStatus, false)
-
+                if (!drainAll) {
+                    break
+                }
                 if (mBufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
                     //结束标识
                     onStopped()

@@ -16,6 +16,7 @@ import com.shencoder.mvvmkit.util.toastError
 import com.shencoder.mvvmkit.util.toastWarning
 import com.shencoder.webrtcextension.OverlayNV21VideoProcessor
 import com.shencoder.webrtcextension.ProxyVideoSink
+import com.shencoder.webrtcextension.recoder.WebRTCVideoRecorder
 import com.shencoder.webrtcextension.util.Nv21BufferUtil
 import com.shencoder.webrtcextensiondemo.constant.Constant
 import com.shencoder.webrtcextensiondemo.databinding.ActivityMainBinding
@@ -28,6 +29,7 @@ import org.koin.android.ext.android.inject
 import org.webrtc.*
 import org.webrtc.audio.JavaAudioDeviceModule
 import org.webrtc.audio.setAudioTrackSamplesReadyCallback
+import java.io.File
 import java.util.*
 
 /**
@@ -52,6 +54,8 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
 
     private lateinit var audioDeviceModule: JavaAudioDeviceModule
     private lateinit var proxyVideoSink: ProxyVideoSink
+
+    private lateinit var videoRecorder: WebRTCVideoRecorder
     override fun getLayoutId(): Int {
         return R.layout.activity_main
     }
@@ -92,6 +96,8 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
     }
 
     override fun initData(savedInstanceState: Bundle?) {
+        val file = File(getExternalFilesDir("video"), "${System.currentTimeMillis()}.mp4")
+        videoRecorder = WebRTCVideoRecorder(file, eglBaseContext, true)
         val options = PeerConnectionFactory.Options()
         val encoderFactory = createCustomVideoEncoderFactory(eglBaseContext, true, true,
             object : VideoEncoderSupportedCallback {
@@ -137,7 +143,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
 
             })
             .setSamplesReadyCallback {
-
+                videoRecorder.onWebRtcAudioRecordSamplesReady(it)
             }.createAudioDeviceModule()
         val decoderFactory = DefaultVideoDecoderFactory(eglBaseContext)
         peerConnectionFactory = PeerConnectionFactory.builder()
@@ -187,11 +193,12 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
             videoTrack =
                 peerConnectionFactory.createVideoTrack("local_video_track", videoSource).apply {
                     addSink(proxyVideoSink)
+                    addSink(videoRecorder)
                 }
             surfaceTextureHelper =
                 SurfaceTextureHelper.create("surface_texture_thread", eglBaseContext)
             capture.initialize(surfaceTextureHelper, this, videoSource.capturerObserver)
-            capture.startCapture(720, 640, 20)
+            capture.startCapture(640, 480, 20)
         }
 
         val rtcConfig = PeerConnection.RTCConfiguration(emptyList())
@@ -199,7 +206,16 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
 
         peerConnection = peerConnectionFactory.createPeerConnection(
             rtcConfig,
-            PeerConnectionObserver()
+            object : PeerConnectionObserver() {
+                override fun onConnectionChange(newState: PeerConnection.PeerConnectionState) {
+                    super.onConnectionChange(newState)
+                    if (newState == PeerConnection.PeerConnectionState.CONNECTED) {
+                        videoRecorder.start()
+                    } else if (newState == PeerConnection.PeerConnectionState.DISCONNECTED || newState == PeerConnection.PeerConnectionState.CLOSED) {
+                        videoRecorder.stop()
+                    }
+                }
+            }
         )?.apply {
             videoTrack?.let {
                 addTransceiver(
