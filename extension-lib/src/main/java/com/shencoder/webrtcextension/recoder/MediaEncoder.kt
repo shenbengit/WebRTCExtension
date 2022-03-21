@@ -1,6 +1,7 @@
 package com.shencoder.webrtcextension.recoder
 
 import android.media.MediaCodec
+import android.util.Log
 import androidx.annotation.CallSuper
 import com.shencoder.webrtcextension.WorkerHandler
 
@@ -14,6 +15,7 @@ import com.shencoder.webrtcextension.WorkerHandler
 abstract class MediaEncoder(protected val encoderName: String) {
 
     private companion object {
+        private const val TAG = "MediaEncoder"
         private const val STATE_NONE = 0
         private const val STATE_PREPARING = 1
         private const val STATE_PREPARED = 2
@@ -77,6 +79,7 @@ abstract class MediaEncoder(protected val encoderName: String) {
                 return@post
             }
             setState(STATE_STARTING)
+            Log.d(TAG, "encoderName:${encoderName} - onStart: ")
             onStart()
         }
     }
@@ -87,6 +90,7 @@ abstract class MediaEncoder(protected val encoderName: String) {
         }
         setState(STATE_STOPPING)
         mWorker.post {
+            Log.w(TAG, "encoderName:${encoderName} - onStop: ")
             onStop()
         }
     }
@@ -127,11 +131,11 @@ abstract class MediaEncoder(protected val encoderName: String) {
             stop()
             release()
         }
-//        mOutputBufferPool.clear()
-//        mOutputBufferPool = null
+        mOutputBufferPool.clear()
         mBuffers = null
         setState(STATE_STOPPED)
         mWorker.destroy()
+        Log.w(TAG, "encoderName:${encoderName} - onStopped: ")
     }
 
     /**
@@ -217,10 +221,11 @@ abstract class MediaEncoder(protected val encoderName: String) {
                         mFirstTimeUs = mBufferInfo.presentationTimeUs
                     }
 
-                    mLastTimeUs = mBufferInfo.presentationTimeUs
-
-                    mBufferInfo.presentationTimeUs =
-                        mStartTimeMillis * 1000 + mLastTimeUs - mFirstTimeUs
+//                    mLastTimeUs = mBufferInfo.presentationTimeUs
+//
+//                    mBufferInfo.presentationTimeUs =
+//                        mStartTimeMillis * 1000 + mLastTimeUs - mFirstTimeUs
+                    mBufferInfo.presentationTimeUs -= mFirstTimeUs
 
                     val buffer = mOutputBufferPool.get()!!
                     //noinspection ConstantConditions

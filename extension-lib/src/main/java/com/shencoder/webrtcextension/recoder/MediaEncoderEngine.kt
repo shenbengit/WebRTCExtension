@@ -2,6 +2,7 @@ package com.shencoder.webrtcextension.recoder
 
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import android.util.Log
 import com.shencoder.webrtcextension.WorkerHandler
 import java.io.File
 
@@ -44,6 +45,7 @@ class MediaEncoderEngine @JvmOverloads constructor(
     }
 
     companion object {
+        private const val TAG = "MediaEncoderEngine"
         const val END_BY_USER = 0
         const val END_BY_MAX_DURATION = 1
         const val END_BY_MAX_SIZE = 2
@@ -129,6 +131,7 @@ class MediaEncoderEngine @JvmOverloads constructor(
         mStoppedEncodersCount = 0
         mMediaMuxerStarted = false
         mControllerThread.destroy()
+        Log.w(TAG, "MediaMuxer release: ")
     }
 
     fun getVideoEncoder(): VideoMediaEncoder = mEncoders[0] as VideoMediaEncoder

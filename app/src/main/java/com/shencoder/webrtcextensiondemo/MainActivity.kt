@@ -111,7 +111,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
 
                 override fun isSupportedH264(info: MediaCodecInfo): Boolean {
                     //自行判断是否支持H264编码
-                    return false
+                    return true
                 }
             })
         audioDeviceModule = JavaAudioDeviceModule.builder(this)

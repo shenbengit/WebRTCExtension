@@ -111,6 +111,9 @@ abstract class BaseNV21VideoProcessor : VideoProcessor {
             frame.rotation,
             frame.timestampNs
         )
+
+        videoFrame.retain()
+
         //将处理好的VideoFrame发送出去
         mSink?.onFrame(videoFrame)
 

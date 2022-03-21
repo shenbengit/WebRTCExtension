@@ -105,8 +105,8 @@ class VideoMediaEncoder(private val sharedContext: EglBase.Context) : MediaEncod
             drainOutput(false)
 
             frameDrawer.drawFrame(frame, glDrawer, null, 0, 0, videoWidth, videoHeight)
-            frame.release()
             eglBase.swapBuffers()
+            frame.release()
         }
     }
 

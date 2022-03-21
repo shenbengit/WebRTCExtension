@@ -50,5 +50,6 @@ dependencies {
 //    implementation 'com.github.shenbengit:WebRTCExtension:1.0.3'
     implementation 'com.github.shenbengit:MVVMKit:1.0.6'
     implementation 'com.guolindev.permissionx:permissionx:1.6.1'
+    implementation 'com.iqiyi.xcrash:xcrash-android-lib:3.0.0'
     implementation project(path: ':extension-lib')
 }

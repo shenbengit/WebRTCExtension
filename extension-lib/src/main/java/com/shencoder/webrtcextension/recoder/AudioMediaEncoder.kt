@@ -3,8 +3,9 @@ package com.shencoder.webrtcextension.recoder
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.util.Log
 import org.webrtc.audio.JavaAudioDeviceModule
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.LinkedBlockingDeque
 
 /**
  * 音频编码器
@@ -23,7 +24,7 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
 
     private val mInputBufferPool = InputBufferPool()
 
-    private val mInputBufferQueue = LinkedBlockingQueue<InputBuffer>()
+    private val mInputBufferDeque = LinkedBlockingDeque<InputBuffer>()
 
     @Volatile
     private var mHadStarted = false
@@ -49,32 +50,46 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
 
     override fun onStop() {
         mHadStarted = false
+        if (mInputBufferDeque.isEmpty()) {
+            val buffer = mInputBufferPool.get()
+            buffer?.let {
+                increaseTime(0)
+                it.isEndOfStream = true
+                it.timestamp = mLastTimeUs
+                acquireInputBuffer(it)
+                encodeInputBuffer(it)
+                drainOutput(true)
+            }
+        } else {
+            val inputBuffer = mInputBufferDeque.peekLast()
+            inputBuffer?.isEndOfStream = true
+        }
     }
 
     override fun onWebRtcAudioRecordSamplesReady(simples: JavaAudioDeviceModule.AudioSamples) {
         if (mHadStarted.not()) {
             return
         }
-        var codec = mMediaCodec
-        if (codec == null) {
-            codec = initAudioEncoder(simples)
-            mMediaCodec = codec
-            initMediaCodecBuffers()
-
-            codec.start()
-        }
 
         mWorker.post {
+            var codec = mMediaCodec
+            if (codec == null) {
+                codec = initAudioEncoder(simples)
+                mMediaCodec = codec
+                initMediaCodecBuffers()
+
+                codec.start()
+            }
             val buffer = mInputBufferPool.get()
             buffer?.let {
                 val data = simples.data
-                buffer.source = data
-                buffer.dataLength = data.size
-                buffer.isEndOfStream = mHadStarted.not()
+                it.source = data
+                it.dataLength = data.size
+                it.isEndOfStream = false
 
                 increaseTime(data.size)
-                buffer.timestamp = mLastTimeUs
-                mInputBufferQueue.add(buffer)
+                it.timestamp = mLastTimeUs
+                mInputBufferDeque.add(it)
             }
         }
     }
@@ -97,14 +112,11 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
     }
 
     private fun increaseTime(readBytes: Int) {
-        mLastTimeUs = mTimestamp.increaseUs(readBytes)
+        mLastTimeUs += readBytes * 125L / 12L
         if (mFirstTimeUs == Long.MIN_VALUE) {
             mFirstTimeUs = mLastTimeUs
             // Compute the first frame milliseconds as well.
-            notifyFirstFrameMillis(
-                System.currentTimeMillis()
-                        - AudioTimestamp.bytesToMillis(readBytes.toLong(), BYTE_RATE)
-            )
+            notifyFirstFrameMillis(mFirstTimeUs)
         }
     }
 
@@ -117,7 +129,7 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
             super.run()
 
             while (true) {
-                val inputBuffer = mInputBufferQueue.poll()
+                val inputBuffer = mInputBufferDeque.poll()
                 if (inputBuffer == null) {
                     if (mHadStarted.not()) {
                         break
@@ -135,6 +147,7 @@ class AudioMediaEncoder : MediaEncoder("AudioEncoder"),
                     }
                 }
             }
+            Log.w("AudioEncodingThread", "AudioEncodingThread - end ")
             mInputBufferPool.clear()
         }
 
