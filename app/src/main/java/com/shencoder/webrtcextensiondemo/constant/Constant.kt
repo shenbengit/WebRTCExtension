@@ -7,6 +7,9 @@ package com.shencoder.webrtcextensiondemo.constant
  * @email   714081644@qq.com
  */
 object Constant {
+
+    const val CRASH_LOG: String = "crash_log"
+
     /**
      * SRS服务器IP
      */
