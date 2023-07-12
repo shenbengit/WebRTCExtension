@@ -73,12 +73,13 @@ class VideoMediaEncoder(private val sharedContext: EglBase.Context) : MediaEncod
     }
 
     override fun onFrame(frame: VideoFrame) {
+        frame.retain()
         mWorker.post {
             val timestampUs = frame.timestampNs / (1000 * 1000)
             if (shouldRenderFrame(timestampUs).not()) {
+                frame.release()
                 return@post
             }
-            frame.retain()
             val videoWidth = frame.rotatedWidth
             val videoHeight = frame.rotatedHeight
 
@@ -147,7 +148,7 @@ class VideoMediaEncoder(private val sharedContext: EglBase.Context) : MediaEncod
             MediaFormat.KEY_COMPLEXITY,
             MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
         )
-        format.setInteger("rotation-degrees", rotation)
+//        format.setInteger("rotation-degrees", rotation)
 
         val encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
         encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
