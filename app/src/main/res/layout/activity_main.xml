@@ -24,7 +24,7 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.shencoder.webrtcextension.CustomSurfaceViewRenderer
+        <com.shencoder.webrtcextension.TextureViewRenderer
             android:id="@+id/svr"
             android:layout_width="match_parent"
             android:layout_height="0dp"
