@@ -7,10 +7,6 @@ package com.shencoder.webrtcextension;
  */
 public enum RotationAngle {
     /**
-     * 原始角度
-     */
-    ANGLE_ORIGINAL(-1),
-    /**
      * 0°
      */
     ANGLE_0(0),

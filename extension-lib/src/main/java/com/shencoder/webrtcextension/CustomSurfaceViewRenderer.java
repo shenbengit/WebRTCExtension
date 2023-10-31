@@ -2,6 +2,7 @@ package com.shencoder.webrtcextension;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Looper;
 import android.util.AttributeSet;
@@ -46,7 +47,7 @@ public class CustomSurfaceViewRenderer extends SurfaceView implements SurfaceHol
     /**
      * rotation angle
      */
-    private RotationAngle mRotationAngle = RotationAngle.ANGLE_ORIGINAL;
+    private RotationAngle mRotationAngle = RotationAngle.ANGLE_0;
 
     /**
      * Standard View constructor. In order to render something, you must first call init().
@@ -146,6 +147,23 @@ public class CustomSurfaceViewRenderer extends SurfaceView implements SurfaceHol
         eglRenderer.removeFrameListener(listener);
     }
 
+    public void takeSnapshot(float scale, EglRenderer.FrameListener listener) {
+        addFrameListener(new EglRenderer.FrameListener() {
+            boolean enable = true;
+
+            @Override
+            public void onFrame(Bitmap bitmap) {
+                if (enable) {
+                    enable = false;
+                    postOrRun(() -> {
+                        removeFrameListener(this);
+                        listener.onFrame(bitmap);
+                    });
+                }
+            }
+        }, scale);
+    }
+
     /**
      * Enables fixed size for the surface. This provides better performance but might be buggy on some
      * devices. By default this is turned off.
@@ -173,6 +191,12 @@ public class CustomSurfaceViewRenderer extends SurfaceView implements SurfaceHol
         eglRenderer.setMirrorVertically(mirrorVertically);
     }
 
+    /**
+     * Set additional rotation angle
+     * 设置额外的旋转角度
+     *
+     * @param rotationAngle
+     */
     public void setRotationAngle(RotationAngle rotationAngle) {
         synchronized (rotationLock) {
             mRotationAngle = rotationAngle;
@@ -221,8 +245,8 @@ public class CustomSurfaceViewRenderer extends SurfaceView implements SurfaceHol
      */
     public void onFrame(VideoFrame frame) {
         synchronized (rotationLock) {
-            if (mRotationAngle != RotationAngle.ANGLE_ORIGINAL) {
-                frame = new VideoFrame(frame.getBuffer(), mRotationAngle.getAngle(), frame.getTimestampNs());
+            if (mRotationAngle != RotationAngle.ANGLE_0) {
+                frame = new VideoFrame(frame.getBuffer(), frame.getRotation() + mRotationAngle.getAngle(), frame.getTimestampNs());
             }
         }
         eglRenderer.onFrame(frame);
