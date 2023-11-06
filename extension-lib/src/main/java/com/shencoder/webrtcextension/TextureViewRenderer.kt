@@ -49,9 +49,10 @@ open class TextureViewRenderer @JvmOverloads constructor(
 
     }
     private val resourceName: String = getResourceName()
-    protected val videoLayoutMeasure = RendererCommon.VideoLayoutMeasure()
-    protected val eglRenderer = TextureEglRenderer(resourceName, internalRendererEvents)
-    private var rendererEvents: RendererCommon.RendererEvents? = null
+    val videoLayoutMeasure = RendererCommon.VideoLayoutMeasure()
+    val eglRenderer = TextureEglRenderer(resourceName, internalRendererEvents)
+    var rendererEvents: RendererCommon.RendererEvents? = null
+        private set
 
     protected var rotatedFrameWidth = 0
     protected var rotatedFrameHeight = 0
@@ -135,18 +136,6 @@ open class TextureViewRenderer @JvmOverloads constructor(
      */
     fun clearImage() {
         eglRenderer.clearImage()
-    }
-
-    fun getVideoLayoutMeasure(): RendererCommon.VideoLayoutMeasure {
-        return videoLayoutMeasure
-    }
-
-    fun getEglRenderer(): TextureEglRenderer {
-        return eglRenderer
-    }
-
-    fun getRendererEvents(): RendererCommon.RendererEvents? {
-        return rendererEvents
     }
 
     /**
