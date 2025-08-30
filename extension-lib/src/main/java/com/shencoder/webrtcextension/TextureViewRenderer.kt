@@ -79,7 +79,7 @@ open class TextureViewRenderer @JvmOverloads constructor(
      */
     @JvmOverloads
     @MainThread
-    fun init(
+    open fun init(
         sharedContext: EglBase.Context? = null,
         rendererEvents: RendererCommon.RendererEvents? = null,
         configAttributes: IntArray = EglBase.CONFIG_PLAIN,
@@ -90,19 +90,19 @@ open class TextureViewRenderer @JvmOverloads constructor(
         eglRenderer.init(sharedContext, configAttributes, drawer, usePresentationTimeStamp)
     }
 
-    fun setMirror(mirror: Boolean) {
+    open fun setMirror(mirror: Boolean) {
         eglRenderer.setMirror(mirror)
     }
 
-    fun setMirrorVertically(mirror: Boolean) {
+    open fun setMirrorVertically(mirror: Boolean) {
         eglRenderer.setMirrorVertically(mirror)
     }
 
-    fun setScalingType(scalingType: RendererCommon.ScalingType) {
+    open fun setScalingType(scalingType: RendererCommon.ScalingType) {
         setScalingType(scalingType, scalingType)
     }
 
-    fun setScalingType(
+    open fun setScalingType(
         scalingTypeMatchOrientation: RendererCommon.ScalingType,
         scalingTypeMismatchOrientation: RendererCommon.ScalingType,
     ) {
@@ -114,11 +114,11 @@ open class TextureViewRenderer @JvmOverloads constructor(
         requestLayout()
     }
 
-    fun pauseVideo() {
+    open fun pauseVideo() {
         eglRenderer.pauseVideo()
     }
 
-    fun resumeVideo() {
+    open fun resumeVideo() {
         eglRenderer.disableFpsReduction()
     }
 
@@ -127,14 +127,14 @@ open class TextureViewRenderer @JvmOverloads constructor(
      * 设置额外的旋转角度
      * @param rotationAngle
      */
-    fun setRotationAngle(rotationAngle: RotationAngle) {
+    open fun setRotationAngle(rotationAngle: RotationAngle) {
         synchronized(rotationLock) { this.rotationAngle = rotationAngle }
     }
 
     /**
      * Post a task to clear the SurfaceView to a transparent uniform color.
      */
-    fun clearImage() {
+    open fun clearImage() {
         eglRenderer.clearImage()
     }
 
@@ -148,7 +148,7 @@ open class TextureViewRenderer @JvmOverloads constructor(
      * @param drawerParam Custom drawer to use for this frame listener.
      */
     @JvmOverloads
-    fun addFrameListener(
+    open fun addFrameListener(
         listener: EglRenderer.FrameListener,
         scale: Float = 1.0f,
         drawerParam: GlDrawer? = null
@@ -156,12 +156,12 @@ open class TextureViewRenderer @JvmOverloads constructor(
         eglRenderer.addFrameListener(listener, scale, drawerParam)
     }
 
-    fun removeFrameListener(listener: EglRenderer.FrameListener) {
+    open fun removeFrameListener(listener: EglRenderer.FrameListener) {
         eglRenderer.removeFrameListener(listener)
     }
 
     @JvmOverloads
-    fun takeSnapshot(
+    open fun takeSnapshot(
         scale: Float = 1.0f,
         drawerParam: GlDrawer? = null,
         callback: (bitmap: Bitmap?) -> Unit
@@ -196,7 +196,7 @@ open class TextureViewRenderer @JvmOverloads constructor(
      * should be called before the Activity is destroyed and the EGLContext is still valid. If you
      * don't call this function, the GL resources might leak.
      */
-    fun release() {
+    open fun release() {
         eglRenderer.release()
     }
 
