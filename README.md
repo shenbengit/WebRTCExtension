@@ -168,7 +168,8 @@ val proxy = ProxyVideoSink(svr, object:VideoFrameProcessor{
 val videoTrack: VideoTrack = ...
 videoTrack.addSink(proxy)
 ```
-### 支持VideoProcessor针对NV21格式数据进行叠图功能，添加基础类
+~~### 支持VideoProcessor针对NV21格式数据进行叠图功能，添加基础类~~
+> 使用 WatermarkVideoProcessor 代替，使用纹理绘制，输出TextureBuffer，兼容各种视频格式，性能更佳
 
 效果展示：左上角有个![](https://github.com/shenbengit/WebRTCExtension/blob/master/app/src/main/res/drawable/aaa.png)图片。   
 
@@ -177,7 +178,7 @@ videoTrack.addSink(proxy)
 - [Android端WebRTC本地音视频采集流程源码分析](https://www.jianshu.com/p/7dc1a6a9d9fd)    
 - [NV21数据处理——实现剪裁，叠图](https://www.jianshu.com/p/9ef94aff13d9)
 
-快速实现叠图功能(**OverlayNV21VideoProcessor**)    
+~~快速实现叠图功能(**OverlayNV21VideoProcessor**)~~    
 > 在nv21数据上进行叠图操作，已经处理不同方向[VideoFrame.rotation]的操作，始终以左上角为起始点；
 ```kotlin
 val videoSource = peerConnectionFactory.createVideoSource(capture.isScreencast)
@@ -195,7 +196,7 @@ videoSource.setVideoProcessor(
  )
 ```
 
-基类**BaseNV21VideoProcessor**      
+~~基类**BaseNV21VideoProcessor**~~      
 若您想自行处理，可以继承BaseNV21VideoProcessor，从而快速实现。
 ```kotlin 
 class MyNV21VideoProcessor : BaseNV21VideoProcessor() {
@@ -219,6 +220,39 @@ class MyNV21VideoProcessor : BaseNV21VideoProcessor() {
 val videoSource = peerConnectionFactory.createVideoSource(capture.isScreencast)
 videoSource.setVideoProcessor(MyNV21VideoProcessor())
 ```
+
+### WatermarkVideoProcessor 给视频流添加水印
+![](https://github.com/shenbengit/WebRTCExtension/blob/master/screenshots/watermark.png)
+详见[WatermarkVideoProcessor](https://github.com/shenbengit/WebRTCExtension/blob/master/extension-lib/src/main/java/org/webrtc/WatermarkVideoProcessor.java)
+
+基本使用：
+```kotlin
+val watermarkVideoProcessor = WatermarkVideoProcessor(eglBaseContext)
+val videoSource = peerConnectionFactory.createVideoSource(capture.isScreencast)
+val bitmap = BitmapFactory.decodeResource(resources, R.drawable.aaa)
+// 可以添加多个水印
+watermarkVideoProcessor.setWatermarks(
+    WatermarkVideoProcessor.Watermark.withPixelSize(
+        bitmap,
+        WatermarkVideoProcessor.Anchor.CENTER,
+        0,
+        0
+    ),
+    WatermarkVideoProcessor.Watermark.withPixelSize(
+        bitmap,
+        50,
+        50,
+        WatermarkVideoProcessor.Anchor.BOTTOM_CENTER,
+        0,
+        0
+    )
+)
+videoSource.setVideoProcessor(watermarkVideoProcessor)
+
+// 释放资源
+watermarkVideoProcessor.dispose()
+```
+
 **NV21Util**  
 NV21数据操作相关方法
 ```java

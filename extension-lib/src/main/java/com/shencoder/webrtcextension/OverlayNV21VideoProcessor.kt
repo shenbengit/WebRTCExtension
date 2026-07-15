@@ -9,6 +9,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import com.shencoder.webrtcextension.util.Nv21BufferUtil
 import org.webrtc.VideoFrame
+import org.webrtc.WatermarkVideoProcessor
 
 /**
  * 在nv21数据上进行叠图操作，已经处理不同[VideoFrame.rotation]操作，始终以左上角为起始点；
@@ -20,10 +21,13 @@ import org.webrtc.VideoFrame
  *
  * if [Nv21Buffer.width]+[left]>=[videoFrameWidth] or [Nv21Buffer.height]+[top]>=[videoFrameHeight], and it will be clipped.
  *
+ * @deprecated use [WatermarkVideoProcessor]
+ *
  * @author  ShenBen
  * @date    2021/12/6 09:36
  * @email   714081644@qq.com
  */
+@Deprecated(message = "use [WatermarkVideoProcessor]")
 class OverlayNV21VideoProcessor @JvmOverloads constructor(
     /**
      * 叠图的[Nv21Buffer]

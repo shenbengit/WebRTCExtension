@@ -5,15 +5,18 @@ import io.github.crow_misia.libyuv.I420Buffer
 import io.github.crow_misia.libyuv.Nv21Buffer
 import org.webrtc.*
 import java.nio.ByteBuffer
+import org.webrtc.WatermarkVideoProcessor
 
 /**
  *
  * [VideoFrame.getBuffer]->[VideoFrame.I420Buffer]->[I420Buffer]->[Nv21Buffer]->processing data->[VideoFrame]
+ * @deprecated use [WatermarkVideoProcessor]
  *
  * @author  ShenBen
  * @date    2021/12/6 08:44
  * @email   714081644@qq.com
  */
+@Deprecated(message = "use [WatermarkVideoProcessor]")
 abstract class BaseNV21VideoProcessor : VideoProcessor {
 
     protected var mSink: VideoSink? = null

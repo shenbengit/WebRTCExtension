@@ -56,6 +56,9 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
     private lateinit var proxyVideoSink: ProxyVideoSink
 
     private lateinit var videoRecorder: WebRTCVideoRecorder
+
+    private val watermarkVideoProcessor = WatermarkVideoProcessor(eglBaseContext)
+
     override fun getLayoutId(): Int {
         return R.layout.activity_main
     }
@@ -157,8 +160,6 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
     private fun requestPermission(url: String) {
         PermissionX.init(this)
             .permissions(
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.CAMERA,
                 Manifest.permission.RECORD_AUDIO
             )
@@ -180,16 +181,34 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
         cameraVideoCapturer?.let { capture ->
             val videoSource = peerConnectionFactory.createVideoSource(capture.isScreencast)
             val bitmap = BitmapFactory.decodeResource(resources, R.drawable.aaa)
-            val nv12Buffer = Nv21BufferUtil.argb8888BitmapToNv21Buffer(bitmap, true)
+//            val nv12Buffer = Nv21BufferUtil.argb8888BitmapToNv21Buffer(bitmap, true)
             //二次处理视频帧数据，叠图
-            videoSource.setVideoProcessor(
-                OverlayNV21VideoProcessor(
-                    overlayNv21Buffer = nv12Buffer,
-                    left = 50,
-                    top = 50,
-                    hasTransparent = true
+//            videoSource.setVideoProcessor(
+//                OverlayNV21VideoProcessor(
+//                    overlayNv21Buffer = nv12Buffer,
+//                    left = 50,
+//                    top = 50,
+//                    hasTransparent = true
+//                )
+//            )
+            // 可以添加多个水印
+            watermarkVideoProcessor.setWatermarks(
+                WatermarkVideoProcessor.Watermark.withPixelSize(
+                    bitmap,
+                    WatermarkVideoProcessor.Anchor.CENTER,
+                    0,
+                    0
+                ),
+                WatermarkVideoProcessor.Watermark.withPixelSize(
+                    bitmap,
+                    50,
+                    50,
+                    WatermarkVideoProcessor.Anchor.BOTTOM_CENTER,
+                    0,
+                    0
                 )
             )
+            videoSource.setVideoProcessor(watermarkVideoProcessor)
             videoTrack =
                 peerConnectionFactory.createVideoTrack("local_video_track", videoSource).apply {
                     addSink(proxyVideoSink)
@@ -375,6 +394,7 @@ class MainActivity : BaseSupportActivity<DefaultViewModel, ActivityMainBinding>(
         mBinding.svr.release()
         audioDeviceModule.release()
         cameraVideoCapturer?.dispose()
+        watermarkVideoProcessor.dispose()
         surfaceTextureHelper?.dispose()
         videoTrack?.dispose()
         peerConnection?.dispose()
