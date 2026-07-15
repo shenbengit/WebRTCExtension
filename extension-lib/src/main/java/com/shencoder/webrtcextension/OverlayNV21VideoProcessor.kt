@@ -5,7 +5,6 @@ import androidx.annotation.IntRange
 import com.shencoder.webrtcextension.util.NV21Util
 import io.github.crow_misia.libyuv.Nv21Buffer
 import io.github.crow_misia.libyuv.RotateMode
-import io.github.crow_misia.libyuv.rotate
 import kotlin.math.abs
 import kotlin.math.max
 import com.shencoder.webrtcextension.util.Nv21BufferUtil

@@ -3,7 +3,6 @@ package com.shencoder.webrtcextension
 import androidx.annotation.CallSuper
 import io.github.crow_misia.libyuv.I420Buffer
 import io.github.crow_misia.libyuv.Nv21Buffer
-import io.github.crow_misia.libyuv.convertTo
 import org.webrtc.*
 import java.nio.ByteBuffer
 
@@ -85,10 +84,7 @@ abstract class BaseNV21VideoProcessor : VideoProcessor {
         }
 
         //标准的I420格式
-        val newI420Buffer = I420Buffer.wrap(byteBuffer, width, height) {
-            JniCommon.nativeFreeByteBuffer(byteBuffer)
-            toI420.release()
-        }
+        val newI420Buffer = I420Buffer.wrap(byteBuffer, width, height)
 
         //通过I420转成NV21
         val nv21Buffer = Nv21Buffer.allocate(width, height)
@@ -96,6 +92,8 @@ abstract class BaseNV21VideoProcessor : VideoProcessor {
         val nv21ByteArray = nv21Buffer.asByteArray()
 
         newI420Buffer.close()
+        JniCommon.nativeFreeByteBuffer(byteBuffer)
+        toI420.release()
         nv21Buffer.close()
 
         //处理nv21数据是否成功

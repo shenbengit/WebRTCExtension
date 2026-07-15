@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    compileSdk 31
-
+    compileSdk 34
+    namespace "com.shencoder.webrtcextensiondemo"
     defaultConfig {
         applicationId "com.shencoder.webrtcextensiondemo"
         minSdk 21
-        targetSdk 31
+        targetSdk 34
         versionCode 1
         versionName "1.0.0"
 
@@ -35,6 +35,7 @@ android {
 
     buildFeatures {
         dataBinding = true
+        buildConfig = true
     }
 }
 
