@@ -5,7 +5,8 @@ Android端WebRTC一些扩展方法:
 - 2、支持自定义是否启用H264、VP8、VP9编码；    
 - 3、自定义SurfaceViewRenderer，支持画面角度旋转，支持设置垂直镜像；  
 - 4、添加VideoSink代理类(ProxyVideoSink)；    
-- 5、支持VideoProcessor针对视频数据进行二次处理，如叠图功能，添加基础类；
+- ~~5、支持VideoProcessor针对视频数据进行二次处理，如叠图功能，添加基础类~~；
+- 6、支持VideoProcessor针对视频流添加水印；
 
 示例中的[demo](https://github.com/shenbengit/WebRTCExtension/tree/master/app)需要使用[SRS视频服务器](https://github.com/ossrs/srs)，具体搭建过程详见SRS官方文档。    
 > 其他Android端WebRTC结合SRS使用示例，详见[WebRTC-SRS](https://github.com/shenbengit/WebRTC-SRS)，完整示例：私聊、群聊、聊天室功能详见[SrsRtcAndroidClient](https://github.com/shenbengit/SrsRtcAndroidClient)。
@@ -172,7 +173,8 @@ videoTrack.addSink(proxy)
 > 使用 WatermarkVideoProcessor 代替，使用纹理绘制，输出TextureBuffer，兼容各种视频格式，性能更佳
 
 效果展示：左上角有个![](https://github.com/shenbengit/WebRTCExtension/blob/master/app/src/main/res/drawable/aaa.png)图片。   
-<img src="https://github.com/shenbengit/WebRTCExtension/blob/master/screenshots/overlay.gif" width="600" />
+
+![](https://github.com/shenbengit/WebRTCExtension/blob/master/screenshots/overlay.gif)
 
 - [Android端WebRTC本地音视频采集流程源码分析](https://www.jianshu.com/p/7dc1a6a9d9fd)    
 - [NV21数据处理——实现剪裁，叠图](https://www.jianshu.com/p/9ef94aff13d9)
@@ -221,8 +223,7 @@ videoSource.setVideoProcessor(MyNV21VideoProcessor())
 ```
 
 ### WatermarkVideoProcessor 给视频流添加水印
-<img src="https://github.com/shenbengit/WebRTCExtension/blob/master/screenshots/watermark.png" width="200" />
-
+![](https://github.com/shenbengit/WebRTCExtension/blob/master/screenshots/watermark.png)
 详见[WatermarkVideoProcessor](https://github.com/shenbengit/WebRTCExtension/blob/master/extension-lib/src/main/java/org/webrtc/WatermarkVideoProcessor.java)
 
 基本使用：
